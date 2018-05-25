@@ -11,7 +11,7 @@
 # V4 = Ventil("/Dev1/port1/line6:7", "V4")
 # V5 = Ventil("/Dev1/port1/line0:1", "V5")
 # V6 = Ventil("/Dev1/port1/line2:3", "V6")
-# V7 = Ventil("/Dev1/port1/line4:5", "V6")
+# V7 = Ventil("/Dev1/port1/line4:5", "V7")
 
 # if (self.Ventil == "V1"):
 #     self.Adress = 'Dev1/port2/line4:5'

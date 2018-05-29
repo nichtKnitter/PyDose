@@ -31,6 +31,16 @@ v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
 v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
 
 
+def Ventile_schalten_ges(v_state_soll, v_state_in):
+    v_state_in = Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], v_state_in)
+    time.sleep(0.5)
+    return v_state_in
 
 def Ventiladressen(Ventil_name):
     if (Ventil_name == "V1"):
@@ -99,29 +109,31 @@ def Ventil_schalten_einzeln(Ventil_name, Befehl_in, v_state):
     return (v_state)
 
 
-def alle_aus():
-    Ventil_schalten_einzeln(1, "aus")
-    Ventil_schalten_einzeln(2, "aus")
-    Ventil_schalten_einzeln(3, "aus")
-    Ventil_schalten_einzeln(4, "aus")
-    Ventil_schalten_einzeln(5, "aus")
-    Ventil_schalten_einzeln(6, "aus")
-    Ventil_schalten_einzeln(7, "aus")
+v_state_soll_alle_zu = {}
+v_state_soll_alle_zu["V1"] = {"state": "zu"}
+v_state_soll_alle_zu["V2"] = {"state": "zu"}
+v_state_soll_alle_zu["V3"] = {"state": "zu"}
+v_state_soll_alle_zu["V4"] = {"state": "zu"}
+v_state_soll_alle_zu["V5"] = {"state": "zu"}
+v_state_soll_alle_zu["V6"] = {"state": "zu"}
+v_state_soll_alle_zu["V7"] = {"state": "zu"}
 
+v_state_soll_alle_aus = {}
+v_state_soll_alle_aus["V1"] = {"active": False}
+v_state_soll_alle_aus["V2"] = {"active": False}
+v_state_soll_alle_aus["V3"] = {"active": False}
+v_state_soll_alle_aus["V4"] = {"active": False}
+v_state_soll_alle_aus["V5"] = {"active": False}
+v_state_soll_alle_aus["V6"] = {"active": False}
+v_state_soll_alle_aus["V7"] = {"active": False}
 
 def alle_auf(v_state_in):
     v_state_in = Ventil_schalten_einzeln("V1", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V2", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V3", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V4", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V5", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V6", "auf", v_state_in)
-    # print("in alle_auf", v_state_in)
     v_state_in = Ventil_schalten_einzeln("V7", "auf", v_state_in)
     print("in alle_auf", v_state_in)
     return (v_state_in)
@@ -139,10 +151,17 @@ def Volumen_evak_grob():
 
 # Volumen_evak_grob()
 Ventil_schalten_einzeln(Ventil_name="V3", Befehl_in="auf", v_state=v_state)
-v_state = alle_auf(v_state)
+# v_state = alle_auf(v_state)
 
 print("\n\n\n Zweiter Durchlauf")
-v_state = alle_auf(v_state)
+# v_state = alle_auf(v_state)
 print("\n\n\n Dritter Durchlauf")
-v_state = alle_auf(v_state)
-print(v_state)
+# v_state = alle_auf(v_state)
+# print(v_state)
+v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+print("\n\n\n Zweiter Durchlauf")
+v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+print("\n\n\n Dritter Durchlauf")
+v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+print("\n\n\n Vierter Durchlauf")
+v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)

@@ -40,6 +40,7 @@ def Ventile_schalten_ges(v_state_soll, v_state_in):
     v_state_in = Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], v_state_in)
     v_state_in = Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], v_state_in)
     time.sleep(0.5)
+    v_state_in = alle_aus(v_state_in)
     return v_state_in
 
 def Ventiladressen(Ventil_name):
@@ -70,42 +71,44 @@ def Ventiladressen(Ventil_name):
 
 def Ventil_schalten_einzeln(Ventil_name, Befehl_in, v_state):
     print("ventilid in Ventil schalten", Ventil_name)
-    if (v_state[Ventil_name]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
-        time.sleep(0.05)
-        Ventil_auf = [True, False]
-        Ventil_zu = [False, True]
-        Ventil_aus = [True, True]
-        Ventiladresse = Ventiladressen(Ventil_name)
-        if (Befehl_in == "auf"):
-            Befehl = Ventil_auf
-        if (Befehl_in == "zu"):
-            Befehl = Ventil_zu
-        if (Befehl_in == "aus"):
-            Befehl = Ventil_aus
-        print("Befehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+    Ventil_auf = [True, False]
+    Ventil_zu = [False, True]
+    Ventil_aus = [True, True]
+    Ventiladresse = Ventiladressen(Ventil_name)
+    if (Befehl_in == "auf"):
+        Befehl = Ventil_auf
+    if (Befehl_in == "zu"):
+        Befehl = Ventil_zu
+    if (Befehl_in == "aus"):
+        Befehl = Ventil_aus
+    print("Befehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
 
-        with nidaqmx.Task() as VentilTask:
-            # VentilTask = nidaqmx.Task() #nur für debugzwecke
-            # print(Ventil_id, Befehl)
-            VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
-            try:
-                (VentilTask.write(Befehl))
-                v_state[Ventil_name]["active"] = True
-                v_state[Ventil_name]["state"] = Befehl_in
-                print("in Ventil.task", v_state[Ventil_name])
-            except nidaqmx.DaqError as e:
-                print(e)
-
-            time.sleep(0.5)
-
-            try:
-                (VentilTask.write(Ventil_aus))  # beide kanäle an, wird nie gebaucht
-                v_state[Ventil_name]["active"] = False
-                # v_state[Ventil_name]["state"] = "aus"
-                print("in Ventil.task", v_state[Ventil_name])
-            except nidaqmx.DaqError as e:
-                print(e)
-    # print("in ventil schalten", v_state)
+    if (Befehl_in == "auf" or Befehl_in == "zu"):
+        if (v_state[Ventil_name]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+            with nidaqmx.Task() as VentilTask:
+                # VentilTask = nidaqmx.Task() #nur für debugzwecke
+                # print(Ventil_id, Befehl)
+                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
+                try:
+                    (VentilTask.write(Befehl))
+                    v_state[Ventil_name]["active"] = True
+                    v_state[Ventil_name]["state"] = Befehl_in
+                    print("in Ventil.task", v_state[Ventil_name])
+                except nidaqmx.DaqError as e:
+                    print(e)
+    if (Befehl_in == "aus"):
+        if (v_state[Ventil_name]["active"] != False):
+            with nidaqmx.Task() as VentilTask:
+                # VentilTask = nidaqmx.Task() #nur für debugzwecke
+                # print(Ventil_id, Befehl)
+                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
+                try:
+                    (VentilTask.write(Ventil_aus))  # beide kanäle an, wird nie gebaucht
+                    v_state[Ventil_name]["active"] = False
+                    # v_state[Ventil_name]["state"] = "aus"
+                    print("in Ventil.task", v_state[Ventil_name])
+                except nidaqmx.DaqError as e:
+                    print(e)
     return (v_state)
 
 
@@ -118,14 +121,14 @@ v_state_soll_alle_zu["V5"] = {"state": "zu"}
 v_state_soll_alle_zu["V6"] = {"state": "zu"}
 v_state_soll_alle_zu["V7"] = {"state": "zu"}
 
-v_state_soll_alle_aus = {}
-v_state_soll_alle_aus["V1"] = {"active": False}
-v_state_soll_alle_aus["V2"] = {"active": False}
-v_state_soll_alle_aus["V3"] = {"active": False}
-v_state_soll_alle_aus["V4"] = {"active": False}
-v_state_soll_alle_aus["V5"] = {"active": False}
-v_state_soll_alle_aus["V6"] = {"active": False}
-v_state_soll_alle_aus["V7"] = {"active": False}
+v_state_soll_alle_auf = {}
+v_state_soll_alle_auf["V1"] = {"state": "auf"}
+v_state_soll_alle_auf["V2"] = {"state": "auf"}
+v_state_soll_alle_auf["V3"] = {"state": "auf"}
+v_state_soll_alle_auf["V4"] = {"state": "auf"}
+v_state_soll_alle_auf["V5"] = {"state": "auf"}
+v_state_soll_alle_auf["V6"] = {"state": "auf"}
+v_state_soll_alle_auf["V7"] = {"state": "auf"}
 
 def alle_auf(v_state_in):
     v_state_in = Ventil_schalten_einzeln("V1", "auf", v_state_in)
@@ -139,6 +142,17 @@ def alle_auf(v_state_in):
     return (v_state_in)
 
 
+def alle_aus(v_state_in):
+    v_state_in = Ventil_schalten_einzeln("V1", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V2", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V3", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V4", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V5", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V6", "aus", v_state_in)
+    v_state_in = Ventil_schalten_einzeln("V7", "aus", v_state_in)
+    print("in alle_aus", v_state_in)
+    return (v_state_in)
+
 def Volumen_evak_grob():
     Ventil_schalten_einzeln(1, "auf")
     Ventil_schalten_einzeln(4, "auf")
@@ -149,19 +163,15 @@ def Volumen_evak_grob():
     Ventil_schalten_einzeln(6, "zu")
 
 
-# Volumen_evak_grob()
-Ventil_schalten_einzeln(Ventil_name="V3", Befehl_in="auf", v_state=v_state)
-# v_state = alle_auf(v_state)
 
-print("\n\n\n Zweiter Durchlauf")
-# v_state = alle_auf(v_state)
-print("\n\n\n Dritter Durchlauf")
-# v_state = alle_auf(v_state)
 # print(v_state)
 v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+time.sleep(2)
 print("\n\n\n Zweiter Durchlauf")
-v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+v_state = Ventile_schalten_ges(v_state_soll_alle_auf, v_state)
+time.sleep(2)
 print("\n\n\n Dritter Durchlauf")
 v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+time.sleep(2)
 print("\n\n\n Vierter Durchlauf")
-v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+v_state = Ventile_schalten_ges(v_state_soll_alle_auf, v_state)

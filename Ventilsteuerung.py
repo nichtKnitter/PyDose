@@ -31,7 +31,7 @@ def v_state_alle_zu():
     v_state_soll_alle_zu["V5"] = {"state": "zu"}
     v_state_soll_alle_zu["V6"] = {"state": "zu"}
     v_state_soll_alle_zu["V7"] = {"state": "zu"}
-    v_state_soll_alle_auf["V_Prop"] = {"state": "aus"}
+    v_state_soll_alle_zu["V_Prop"] = {"state": "aus"}
     return v_state_soll_alle_zu
 
 v_state_soll_alle_auf = {}
@@ -52,7 +52,7 @@ v_state_soll_Volumen_evak_grob["V4"] = {"state": "zu"}
 v_state_soll_Volumen_evak_grob["V5"] = {"state": "auf"}
 v_state_soll_Volumen_evak_grob["V6"] = {"state": "zu"}
 v_state_soll_Volumen_evak_grob["V7"] = {"state": "zu"}
-v_state_soll_alle_auf["V_Prop"] = {"state": "aus"}
+v_state_soll_Volumen_evak_grob["V_Prop"] = {"state": "aus"}
 
 
 def v_Prop_an_aus(v_state, Befehl_in):
@@ -73,6 +73,25 @@ def v_Prop_an_aus(v_state, Befehl_in):
                 print("in Ventil.task", v_state["V_Prop"])
             except nidaqmx.DaqError as e:
                 print(e)
+    return v_state
+
+
+def v_Prop_Stellgrad(v_state, Prozent):
+    umax = 5  # V
+    umin = 0  # V
+    usoll = ((umax - umin) / 100) * Prozent
+    Ventiladresse = Ventiladressen("V_PropStellgrad")
+
+    with nidaqmx.Task() as VentilTask:
+        # VentilTask = nidaqmx.Task() #nur für debugzwecke
+        # print(Ventil_id, Befehl)
+        VentilTask.ao_channels.add_ao_voltage_chan("Dev1/ao0", min_val=0, max_val=5)
+
+        try:
+            VentilTask.write(usoll)
+            v_state["V_PropStellgrad"]["stellgrad"] = Prozent
+        except nidaqmx.DaqError as e:
+            print(e)
     return v_state
 
 

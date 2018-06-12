@@ -1,0 +1,48 @@
+# Todo:
+
+
+### dsfsdf
+
+
+## Ventilsteueung
+* Ventilsteuerung in Klasse umwandeln
+* Alle States hinterlegen
+* PID Controller
+* Ablaufsteuerung
+
+## Messignale
+* Thread der die ganze Zeit misst
+
+* Signale Speichern (Text + SQL)
+
+## Gui
+Darstellung
+* Messsignale in Graph darstellen
+* Satus der Ventile in Graphik darstellen
+
+Bedienung
+* Manuelle Ventilcontrolle
+* Fenster ? Zur Messprogrammierung
+
+
+
+
+ *asterisks*   
+ _underscores_ 
+ **asterisks** 
+ **asterisks  _underscores_**
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+* Unordered sub-list. 
+- Or minuses
++ Or pluses
+
+Markdown | Less | Pretty
+--- | --- | ---
+*Still* | `renders` | **nicely**
+1 | 2 | 3

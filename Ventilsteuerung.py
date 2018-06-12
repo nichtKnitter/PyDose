@@ -8,18 +8,43 @@ from nidaqmx.constants import (LineGrouping)
 pp = pprint.PrettyPrinter(indent=4)
 import time
 
+from transitions import Machine
 
-def v_state_init():
+
+class Ventile(object):
+    states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen"]
+
     v_state = {}
-    v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
-    v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
-    v_state["V3"] = {"id": 3, "state": "NA", "active": "NA"}
-    v_state["V4"] = {"id": 4, "state": "NA", "active": "NA"}
-    v_state["V5"] = {"id": 5, "state": "NA", "active": "NA"}
-    v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
-    v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-    v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
-    return v_state
+
+    def __init__(self):
+        self.v_state = self.v_state_init()
+        self.machine = Machine(model=self, states=Ventile.states, initial='reset')
+        self.machine.add_transition("Druck_Halten", source="Messen", dest='druck_halten')
+        self.machine.add_transition("druck_halten", source="reset", dest='druck_halten')
+
+    def v_state_init(self):
+        v_state = {}
+        v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
+        v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
+        v_state["V3"] = {"id": 3, "state": "NA", "active": "NA"}
+        v_state["V4"] = {"id": 4, "state": "NA", "active": "NA"}
+        v_state["V5"] = {"id": 5, "state": "NA", "active": "NA"}
+        v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
+        v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
+        v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
+        return v_state
+
+    def run(self):
+        if self.states == 'evakuieren grob':
+            print("run")
+            pass
+
+    def druck_halten(self):
+        print("Beauty, eh?")
+
+
+V = Ventile()
+
 
 
 def v_state_alle_zu():
@@ -34,15 +59,19 @@ def v_state_alle_zu():
     v_state_soll_alle_zu["V_Prop"] = {"state": "aus"}
     return v_state_soll_alle_zu
 
-v_state_soll_alle_auf = {}
-v_state_soll_alle_auf["V1"] = {"state": "auf"}
-v_state_soll_alle_auf["V2"] = {"state": "auf"}
-v_state_soll_alle_auf["V3"] = {"state": "auf"}
-v_state_soll_alle_auf["V4"] = {"state": "auf"}
-v_state_soll_alle_auf["V5"] = {"state": "auf"}
-v_state_soll_alle_auf["V6"] = {"state": "auf"}
-v_state_soll_alle_auf["V7"] = {"state": "auf"}
-v_state_soll_alle_auf["V_Prop"] = {"state": "an"}
+
+def v_state_alle_auf():
+    v_state_soll_alle_auf = {}
+    v_state_soll_alle_auf["V1"] = {"state": "auf"}
+    v_state_soll_alle_auf["V2"] = {"state": "auf"}
+    v_state_soll_alle_auf["V3"] = {"state": "auf"}
+    v_state_soll_alle_auf["V4"] = {"state": "auf"}
+    v_state_soll_alle_auf["V5"] = {"state": "auf"}
+    v_state_soll_alle_auf["V6"] = {"state": "auf"}
+    v_state_soll_alle_auf["V7"] = {"state": "auf"}
+    v_state_soll_alle_auf["V_Prop"] = {"state": "an"}
+    return v_state_soll_alle_auf
+
 
 v_state_soll_Volumen_evak_grob = {}
 v_state_soll_Volumen_evak_grob["V1"] = {"state": "auf"}
@@ -77,6 +106,7 @@ def v_Prop_an_aus(v_state, Befehl_in):
 
 
 def v_Prop_Stellgrad(v_state, Prozent):
+
     umax = 5  # V
     umin = 0  # V
     usoll = ((umax - umin) / 100) * Prozent
@@ -85,11 +115,13 @@ def v_Prop_Stellgrad(v_state, Prozent):
     with nidaqmx.Task() as VentilTask:
         # VentilTask = nidaqmx.Task() #nur für debugzwecke
         # print(Ventil_id, Befehl)
-        VentilTask.ao_channels.add_ao_voltage_chan("Dev1/ao0", min_val=0, max_val=5)
+        VentilTask.ao_channels.add_ao_voltage_chan("Dev1/ao0", min_val=0,
+                                                   max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
 
         try:
             VentilTask.write(usoll)
-            v_state["V_PropStellgrad"]["stellgrad"] = Prozent
+            v_state["V_Prop"]["stellgrad"] = Prozent
+            print("V_prop Stellgrad = \t", v_state["V_Prop"]["stellgrad"], "\tProzent")
         except nidaqmx.DaqError as e:
             print(e)
     return v_state
@@ -218,26 +250,28 @@ def Ventil_schalten_einzeln(Ventil_name, Befehl_in, v_state, einzeln_deaktiviere
 
 
 def Ablauf_Test1(v_state):
-    v_state_soll_alle_zu = v_state_alle_zu()
-
-    # print(v_state)
-    v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+    print("\n\n\n Vierter Durchlauf")
+    v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob, v_state)
+    print("\n\n\n Vierter Durchlauf")
     time.sleep(2)
-    print("\n\n\n Vierter Durchlauf")
-    v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob, v_state)
-    # print("\n\n\n Zweiter Durchlauf")
-    # v_state = Ventile_schalten_ges(v_state_soll_alle_auf, v_state)
-    # time.sleep(2)
-    # print("\n\n\n Dritter Durchlauf")
-    # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
-    # time.sleep(2)
-    print("\n\n\n Vierter Durchlauf")
     v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
     print("\n\n\n Vierter Durchlauf")
+    time.sleep(2)
     v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob, v_state)
+    time.sleep(2)
+    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=1)
+    time.sleep(2)
+    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=50)
+    time.sleep(2)
+    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=70)
     return v_state
 
 
 if __name__ == '__main__':
-    v_state = v_state_init()
-    Ablauf_Test1(v_state)
+    # folgende Zeilen müssen in self.init kommen
+    v_state_soll_alle_zu = v_state_alle_zu()
+    v_state_soll_alle_auf = v_state_alle_auf()
+    # v_state = v_state_init()  # state initialisieren, oder zurücksetzen...
+
+    # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
+    # Ablauf_Test1(v_state)

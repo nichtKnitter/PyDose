@@ -32,7 +32,7 @@ class Ventile(object):
     def __init__(self):
         self.v_state = self.vSstateInit()
         self.Takt_s = 1
-        self.solldruck = 56
+        self.solldruck = 5600
         self.druck = 56
 
         self.machine = Machine(model=self, states=Ventile.states, initial='reset')

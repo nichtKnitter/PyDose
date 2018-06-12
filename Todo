@@ -1,9 +1,14 @@
 # Todo:
+
+## sonstiges
++ gitlab
+
 ## Ventilsteuerung
 * Ventilsteuerung in Klasse umwandeln
 * Alle States hinterlegen
 * PID Controller (Redus?)
 * Ablaufsteuerung
++ async() zum messen+steuern benutzen
 
 * im run() checkmethode bauen, die segmenttabelle durchgeht 
 

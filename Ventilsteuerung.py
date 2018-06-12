@@ -10,17 +10,29 @@ import time
 
 from transitions import Machine
 
+# Set up logging; The basic log level will be DEBUG
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+# Set transitions' log level to INFO; DEBUG messages will be omitted
+logging.getLogger('transitions').setLevel(logging.INFO)
+
+from transitions.extensions import GraphMachine as Machine
 
 class Ventile(object):
-    states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen"]
+    states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
+              "warten"]
 
     v_state = {}
 
     def __init__(self):
         self.v_state = self.v_state_init()
         self.machine = Machine(model=self, states=Ventile.states, initial='reset')
-        self.machine.add_transition("Druck_Halten", source="Messen", dest='druck_halten')
-        self.machine.add_transition("druck_halten", source="reset", dest='druck_halten')
+        self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
+        self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
+
+        self.machine.add_transition("messen_start", source="warten", dest='messen')
+        self.machine.add_transition("messen_stop", source="messen", dest='warten')
 
     def v_state_init(self):
         v_state = {}
@@ -275,3 +287,7 @@ if __name__ == '__main__':
 
     # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
     # Ablauf_Test1(v_state)
+    V.to_Messen()
+    print(V.state)
+    V.to_warten()
+    print(V.state)

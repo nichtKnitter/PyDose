@@ -3,5 +3,10 @@ Readme
 
 Installation
 
-(base) D:\Users\userad-de08507\Desktop\Masterarbeit\packages\transitions-master>
-python setup.py install
+
+pip install transitions
+pip download graphviz
+pip install graphviz-0.8.3-py2.py3-none-any.whl
+
+pip install transitions[diagrams]
+

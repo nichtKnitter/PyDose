@@ -1,10 +1,5 @@
 # Todo:
-
-
-### dsfsdf
-
-
-## Ventilsteueung
+## Ventilsteuerung
 * Ventilsteuerung in Klasse umwandeln
 * Alle States hinterlegen
 * PID Controller
@@ -26,8 +21,12 @@ Bedienung
 * Manuelle Ventilcontrolle
 * Fenster ? Zur Messprogrammierung
 
-
-
+## Auswertung/Berechnung
++ Dampfdrücke mittels Antoine
++ beladung
++ ads.vol
++ ads.pot
++ ganzes andere tg_max_skript
  
  ## Arbeit
  ###Präsentationen: 

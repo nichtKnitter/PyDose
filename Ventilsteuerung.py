@@ -24,10 +24,7 @@ class Ventile(object):
     states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
               "warten"]
     next_segment = False
-
     v_state = {}
-
-
 
     def __init__(self):
         self.v_state = self.vSstateInit()
@@ -78,6 +75,29 @@ class Ventile(object):
     def readSensors(self):
         self.druck = print("Sensoren lesen")
 
+    def v_Prop_Stellgrad(self, Prozent):
+
+        umax = 5  # V
+        umin = 0  # V
+        usoll = ((umax - umin) / 100) * Prozent
+        Ventiladresse = Ventiladressen("V_PropStellgrad")
+
+        with nidaqmx.Task() as VentilTask:
+            # VentilTask = nidaqmx.Task() #nur für debugzwecke
+            # print(Ventil_id, Befehl)
+            VentilTask.ao_channels.add_ao_voltage_chan("Dev1/ao0", min_val=0,
+                                                       max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
+
+            try:
+                VentilTask.write(usoll)
+                v_state["V_Prop"]["stellgrad"] = Prozent
+                pp.pprint("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent")
+            except nidaqmx.DaqError as e:
+                pp.pprint(e)
+        return self.v_state
+
+    # Ab hier Statedefinitionen
+
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
         Ventil_aus = [False]
@@ -98,19 +118,17 @@ class Ventile(object):
                 except nidaqmx.DaqError as e:
                     pp.pprint(e)
 
-    # Ab hier Statedefinitionen
-
     def vStateAlleZu(self):
-        vStateSollAlleZu = {}
-        vStateSollAlleZu["V1"] = {"state": "zu"}
-        vStateSollAlleZu["V2"] = {"state": "zu"}
-        vStateSollAlleZu["V3"] = {"state": "zu"}
-        vStateSollAlleZu["V4"] = {"state": "zu"}
-        vStateSollAlleZu["V5"] = {"state": "zu"}
-        vStateSollAlleZu["V6"] = {"state": "zu"}
-        vStateSollAlleZu["V7"] = {"state": "zu"}
-        vStateSollAlleZu["V_Prop"] = {"state": "aus"}
-        return vStateSollAlleZu
+        self.vStateSollAlleZu = {}
+        self.vStateSollAlleZu["V1"] = {"state": "zu"}
+        self.vStateSollAlleZu["V2"] = {"state": "zu"}
+        self.vStateSollAlleZu["V3"] = {"state": "zu"}
+        self.vStateSollAlleZu["V4"] = {"state": "zu"}
+        self.vStateSollAlleZu["V5"] = {"state": "zu"}
+        self.vStateSollAlleZu["V6"] = {"state": "zu"}
+        self.vStateSollAlleZu["V7"] = {"state": "zu"}
+        self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
+        return self.vStateSollAlleZu
 
     def vSstateInit(self):
         self.v_state = {}
@@ -136,42 +154,21 @@ class Ventile(object):
         self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
 
     def v_state_soll_Volumen_evak_grob(self):
-        v_state_soll_Volumen_evak_grob = {}
-        v_state_soll_Volumen_evak_grob["V1"] = {"state": "auf"}
-        v_state_soll_Volumen_evak_grob["V2"] = {"state": "zu"}
-        v_state_soll_Volumen_evak_grob["V3"] = {"state": "zu"}
-        v_state_soll_Volumen_evak_grob["V4"] = {"state": "zu"}
-        v_state_soll_Volumen_evak_grob["V5"] = {"state": "auf"}
-        v_state_soll_Volumen_evak_grob["V6"] = {"state": "zu"}
-        v_state_soll_Volumen_evak_grob["V7"] = {"state": "zu"}
-        v_state_soll_Volumen_evak_grob["V_Prop"] = {"state": "aus"}
-        return v_state_soll_Volumen_evak_grob
+        self.vStateSollVolumenEvakGrob = {}
+        self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V3"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V4"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V5"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
+        return self.vStateSollVolumenEvakGrob
 
 
 V = Ventile()
+
 V.druck_halten(50, 30)
-
-
-def v_Prop_Stellgrad(v_state, Prozent):
-
-    umax = 5  # V
-    umin = 0  # V
-    usoll = ((umax - umin) / 100) * Prozent
-    Ventiladresse = Ventiladressen("V_PropStellgrad")
-
-    with nidaqmx.Task() as VentilTask:
-        # VentilTask = nidaqmx.Task() #nur für debugzwecke
-        # print(Ventil_id, Befehl)
-        VentilTask.ao_channels.add_ao_voltage_chan("Dev1/ao0", min_val=0,
-                                                   max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
-
-        try:
-            VentilTask.write(usoll)
-            v_state["V_Prop"]["stellgrad"] = Prozent
-            pp.pprint("V_prop Stellgrad = \t", v_state["V_Prop"]["stellgrad"], "\tProzent")
-        except nidaqmx.DaqError as e:
-            pp.pprint(e)
-    return v_state
 
 
 def alle_aus(v_state_in):

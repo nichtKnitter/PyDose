@@ -2,6 +2,7 @@
 
 ## sonstiges
 + gitlab
++ Imago 500 reparieren
 
 ## Ventilsteuerung
 * Ventilsteuerung in Klasse umwandeln
@@ -40,7 +41,15 @@ auswertung
 + ads.pot
 + ganzes andere tg_max_skript
  
- ## Arbeit
+ ## Hardware
+ * Schmelzsicherung vor Heizer
+ * Drucksensor kleinerer Auflösung?
+ * Wenn Undicht pneumatische ventile? 
+ Fünf habe ich noch , müsste zwei neue kaufen oder unkritischte Ventile lassen/ beste von den Magnetvetilen nehmen
+ * Heizregler aus Peltier einbauen
+ 
+ 
+ ## MasterArbeit
  ###Präsentationen: 
  1) Graphik der States erstellen, 
  + dazu pygraphviz installieren und 

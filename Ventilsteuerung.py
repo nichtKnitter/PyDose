@@ -17,20 +17,26 @@ logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 logging.getLogger('transitions').setLevel(logging.INFO)
 
-from transitions.extensions import GraphMachine as Machine
+
+# from transitions.extensions import GraphMachine as Machine
 
 class Ventile(object):
     states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
               "warten"]
 
     v_state = {}
+    next_segment = False
 
     def __init__(self):
         self.v_state = self.v_state_init()
+        self.Takt_s = 1
+        self.solldruck = 56
+        self.druck = 56
+
         self.machine = Machine(model=self, states=Ventile.states, initial='reset')
+
         self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
         self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
-
         self.machine.add_transition("messen_start", source="warten", dest='messen')
         self.machine.add_transition("messen_stop", source="messen", dest='warten')
 
@@ -47,16 +53,32 @@ class Ventile(object):
         return v_state
 
     def run(self):
-        if self.states == 'evakuieren grob':
-            print("run")
-            pass
+        while True:
+            time.sleep(self.Takt_s)
+            time_s = time.time()
+            pp.pprint(time.time())
 
-    def druck_halten(self):
-        print("Beauty, eh?")
+            self.solldruck = 56  # aus segmentconfig uebernehem
+            # Todo: hier in den state messen wechseln
+            # Messen(Next_state)
+            print("self.druck = readSensors()")
+            print(Ventile.states)
+            if time_s < (self.druck - 1) or next_segment == True:
+                # or max zeit or user event
+                break
 
+    def druck_halten(self, solldruck, time_s):
+        self.machine.set_state("druck_halten")
+        print("Ventile schalten")
+        print(solldruck)
+
+        # if abs(solldruck - self.druck)> self.delta_p:
+
+    def readSensors(self):
+        self.druck = print("Sensoren lesen")
 
 V = Ventile()
-
+V.druck_halten(50, 30)
 
 
 def v_state_alle_zu():
@@ -110,10 +132,10 @@ def v_Prop_an_aus(v_state, Befehl_in):
             try:
                 (VentilTask.write(Befehl))
                 v_state["V_Prop"]["state"] = Befehl_in
-                print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                print("in Ventil.task", v_state["V_Prop"])
+                pp.pprint("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+                pp.pprint("in Ventil.task", v_state["V_Prop"])
             except nidaqmx.DaqError as e:
-                print(e)
+                pp.pprint(e)
     return v_state
 
 
@@ -133,9 +155,9 @@ def v_Prop_Stellgrad(v_state, Prozent):
         try:
             VentilTask.write(usoll)
             v_state["V_Prop"]["stellgrad"] = Prozent
-            print("V_prop Stellgrad = \t", v_state["V_Prop"]["stellgrad"], "\tProzent")
+            pp.pprint("V_prop Stellgrad = \t", v_state["V_Prop"]["stellgrad"], "\tProzent")
         except nidaqmx.DaqError as e:
-            print(e)
+            pp.pprint(e)
     return v_state
 
 
@@ -151,7 +173,7 @@ def alle_aus(v_state_in):
     v_state_in = Ventil_schalten_einzeln("V5", "aus", v_state_in, False)
     v_state_in = Ventil_schalten_einzeln("V6", "aus", v_state_in, False)
     v_state_in = Ventil_schalten_einzeln("V7", "aus", v_state_in, False)
-    print("in alle_aus", v_state_in)
+    pp.pprint("in alle_aus", v_state_in)
     return (v_state_in)
 
 

@@ -2,7 +2,7 @@
 ## Ventilsteuerung
 * Ventilsteuerung in Klasse umwandeln
 * Alle States hinterlegen
-* PID Controller
+* PID Controller (Redus?)
 * Ablaufsteuerung
 
 * im run() checkmethode bauen, die segmenttabelle durchgeht 
@@ -42,11 +42,16 @@ auswertung
  + pip install pygraphviz  # install pygraphviz manually...
  + pip install transitions[diagrams]  # ... or install transitions with 'diagrams' extras
 + Scheitert gerade an compilieren von Pygraphviz
- 
- 
+
  
 ---
+ 
+---
+ 
+---
+
 ###Vorlagen
+
 Markdown | Less | Pretty
 --- | --- | ---
 *Still* | `renders` | **nicely**

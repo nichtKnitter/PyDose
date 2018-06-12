@@ -30,7 +30,7 @@ class Ventile(object):
 
 
     def __init__(self):
-        self.v_state = self.v_state_init()
+        self.v_state = self.vSstateInit()
         self.Takt_s = 1
         self.solldruck = 56
         self.druck = 56
@@ -41,20 +41,14 @@ class Ventile(object):
         self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
         self.machine.add_transition("messen_start", source="warten", dest='messen')
         self.machine.add_transition("messen_stop", source="messen", dest='warten')
-        v_state_soll_alle_zu = self.v_state_alle_zu()
-        v_state_soll_alle_auf = self.v_state_alle_auf()
 
-    def v_state_init(self):
-        v_state = {}
-        v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
-        v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
-        v_state["V3"] = {"id": 3, "state": "NA", "active": "NA"}
-        v_state["V4"] = {"id": 4, "state": "NA", "active": "NA"}
-        v_state["V5"] = {"id": 5, "state": "NA", "active": "NA"}
-        v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
-        v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-        v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
-        return v_state
+        # States:
+        # nur zum initialisieren, macht nichts wenn ich methoden überschreibe
+        self.v_soll_alle_zu = self.vStateAlleZu()
+        self.v_soll_alle_auf = self.vStateAlleAuf()
+        # self.vStateSollAlleAuf = self.vStateAlleAuf()
+
+
 
     def run(self):
         while True:
@@ -70,9 +64,9 @@ class Ventile(object):
             print("self.druck = readSensors()")
             print(Ventile.states)
             time_s = 20
-            if time_s < (self.druck - 1) or next_segment == True:
-                # or max zeit or user event
-                break
+            # if time_s < (self.druck - 1) or next_segment == True:
+            #     # or max zeit or user event
+            #     break
 
     def druck_halten(self, solldruck, time_s):
         self.machine.set_state("druck_halten")
@@ -84,66 +78,78 @@ class Ventile(object):
     def readSensors(self):
         self.druck = print("Sensoren lesen")
 
-    def v_state_alle_zu(self):
-        v_state_soll_alle_zu = {}
-        v_state_soll_alle_zu["V1"] = {"state": "zu"}
-        v_state_soll_alle_zu["V2"] = {"state": "zu"}
-        v_state_soll_alle_zu["V3"] = {"state": "zu"}
-        v_state_soll_alle_zu["V4"] = {"state": "zu"}
-        v_state_soll_alle_zu["V5"] = {"state": "zu"}
-        v_state_soll_alle_zu["V6"] = {"state": "zu"}
-        v_state_soll_alle_zu["V7"] = {"state": "zu"}
-        v_state_soll_alle_zu["V_Prop"] = {"state": "aus"}
-        return v_state_soll_alle_zu
+    def vPropAnAus(self, Befehl_in="an"):
+        Ventil_an = [True]
+        Ventil_aus = [False]
+        Ventiladresse = self.Ventiladressen("V_PropOnOff")
+        if (Befehl_in == "an"):
+            Befehl = Ventil_an
+        if (Befehl_in == "aus"):
+            Befehl = Ventil_aus
+        if (self.v_state["V_Prop"][
+            "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+            with nidaqmx.Task() as VentilTask:
+                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
+                try:
+                    (VentilTask.write(Befehl))
+                    self.v_state["V_Prop"]["state"] = Befehl_in
+                    pp.pprint("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+                    pp.pprint("in Ventil.task", v_state["V_Prop"])
+                except nidaqmx.DaqError as e:
+                    pp.pprint(e)
 
-    def v_state_alle_auf(self):
-        v_state_soll_alle_auf = {}
-        v_state_soll_alle_auf["V1"] = {"state": "auf"}
-        v_state_soll_alle_auf["V2"] = {"state": "auf"}
-        v_state_soll_alle_auf["V3"] = {"state": "auf"}
-        v_state_soll_alle_auf["V4"] = {"state": "auf"}
-        v_state_soll_alle_auf["V5"] = {"state": "auf"}
-        v_state_soll_alle_auf["V6"] = {"state": "auf"}
-        v_state_soll_alle_auf["V7"] = {"state": "auf"}
-        v_state_soll_alle_auf["V_Prop"] = {"state": "an"}
-        return v_state_soll_alle_auf
+    # Ab hier Statedefinitionen
+
+    def vStateAlleZu(self):
+        vStateSollAlleZu = {}
+        vStateSollAlleZu["V1"] = {"state": "zu"}
+        vStateSollAlleZu["V2"] = {"state": "zu"}
+        vStateSollAlleZu["V3"] = {"state": "zu"}
+        vStateSollAlleZu["V4"] = {"state": "zu"}
+        vStateSollAlleZu["V5"] = {"state": "zu"}
+        vStateSollAlleZu["V6"] = {"state": "zu"}
+        vStateSollAlleZu["V7"] = {"state": "zu"}
+        vStateSollAlleZu["V_Prop"] = {"state": "aus"}
+        return vStateSollAlleZu
+
+    def vSstateInit(self):
+        self.v_state = {}
+        self.v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
+        self.v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
+        self.v_state["V3"] = {"id": 3, "state": "NA", "active": "NA"}
+        self.v_state["V4"] = {"id": 4, "state": "NA", "active": "NA"}
+        self.v_state["V5"] = {"id": 5, "state": "NA", "active": "NA"}
+        self.v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
+        self.v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
+        self.v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
+        return self.v_state
+
+    def vStateAlleAuf(self):
+        self.vStateSollAlleAuf = {}
+        self.vStateSollAlleAuf["V1"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V2"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V3"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V4"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V5"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V6"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V7"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
+
+    def v_state_soll_Volumen_evak_grob(self):
+        v_state_soll_Volumen_evak_grob = {}
+        v_state_soll_Volumen_evak_grob["V1"] = {"state": "auf"}
+        v_state_soll_Volumen_evak_grob["V2"] = {"state": "zu"}
+        v_state_soll_Volumen_evak_grob["V3"] = {"state": "zu"}
+        v_state_soll_Volumen_evak_grob["V4"] = {"state": "zu"}
+        v_state_soll_Volumen_evak_grob["V5"] = {"state": "auf"}
+        v_state_soll_Volumen_evak_grob["V6"] = {"state": "zu"}
+        v_state_soll_Volumen_evak_grob["V7"] = {"state": "zu"}
+        v_state_soll_Volumen_evak_grob["V_Prop"] = {"state": "aus"}
+        return v_state_soll_Volumen_evak_grob
 
 
 V = Ventile()
 V.druck_halten(50, 30)
-
-
-
-v_state_soll_Volumen_evak_grob = {}
-v_state_soll_Volumen_evak_grob["V1"] = {"state": "auf"}
-v_state_soll_Volumen_evak_grob["V2"] = {"state": "zu"}
-v_state_soll_Volumen_evak_grob["V3"] = {"state": "zu"}
-v_state_soll_Volumen_evak_grob["V4"] = {"state": "zu"}
-v_state_soll_Volumen_evak_grob["V5"] = {"state": "auf"}
-v_state_soll_Volumen_evak_grob["V6"] = {"state": "zu"}
-v_state_soll_Volumen_evak_grob["V7"] = {"state": "zu"}
-v_state_soll_Volumen_evak_grob["V_Prop"] = {"state": "aus"}
-
-
-def v_Prop_an_aus(v_state, Befehl_in):
-    Ventil_an = [True]
-    Ventil_aus = [False]
-    Ventiladresse = Ventiladressen("V_PropOnOff")
-    if (Befehl_in == "an"):
-        Befehl = Ventil_an
-    if (Befehl_in == "aus"):
-        Befehl = Ventil_aus
-    if (v_state["V_Prop"]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
-        with nidaqmx.Task() as VentilTask:
-            VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
-            try:
-                (VentilTask.write(Befehl))
-                v_state["V_Prop"]["state"] = Befehl_in
-                pp.pprint("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                pp.pprint("in Ventil.task", v_state["V_Prop"])
-            except nidaqmx.DaqError as e:
-                pp.pprint(e)
-    return v_state
 
 
 def v_Prop_Stellgrad(v_state, Prozent):

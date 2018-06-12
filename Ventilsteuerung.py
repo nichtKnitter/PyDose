@@ -23,9 +23,11 @@ logging.getLogger('transitions').setLevel(logging.INFO)
 class Ventile(object):
     states = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
               "warten"]
+    next_segment = False
 
     v_state = {}
-    next_segment = False
+
+
 
     def __init__(self):
         self.v_state = self.v_state_init()
@@ -39,6 +41,8 @@ class Ventile(object):
         self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
         self.machine.add_transition("messen_start", source="warten", dest='messen')
         self.machine.add_transition("messen_stop", source="messen", dest='warten')
+        v_state_soll_alle_zu = self.v_state_alle_zu()
+        v_state_soll_alle_auf = self.v_state_alle_auf()
 
     def v_state_init(self):
         v_state = {}
@@ -58,11 +62,14 @@ class Ventile(object):
             time_s = time.time()
             pp.pprint(time.time())
 
+            self.machine.states
+
             self.solldruck = 56  # aus segmentconfig uebernehem
             # Todo: hier in den state messen wechseln
             # Messen(Next_state)
             print("self.druck = readSensors()")
             print(Ventile.states)
+            time_s = 20
             if time_s < (self.druck - 1) or next_segment == True:
                 # or max zeit or user event
                 break
@@ -77,34 +84,34 @@ class Ventile(object):
     def readSensors(self):
         self.druck = print("Sensoren lesen")
 
+    def v_state_alle_zu(self):
+        v_state_soll_alle_zu = {}
+        v_state_soll_alle_zu["V1"] = {"state": "zu"}
+        v_state_soll_alle_zu["V2"] = {"state": "zu"}
+        v_state_soll_alle_zu["V3"] = {"state": "zu"}
+        v_state_soll_alle_zu["V4"] = {"state": "zu"}
+        v_state_soll_alle_zu["V5"] = {"state": "zu"}
+        v_state_soll_alle_zu["V6"] = {"state": "zu"}
+        v_state_soll_alle_zu["V7"] = {"state": "zu"}
+        v_state_soll_alle_zu["V_Prop"] = {"state": "aus"}
+        return v_state_soll_alle_zu
+
+    def v_state_alle_auf(self):
+        v_state_soll_alle_auf = {}
+        v_state_soll_alle_auf["V1"] = {"state": "auf"}
+        v_state_soll_alle_auf["V2"] = {"state": "auf"}
+        v_state_soll_alle_auf["V3"] = {"state": "auf"}
+        v_state_soll_alle_auf["V4"] = {"state": "auf"}
+        v_state_soll_alle_auf["V5"] = {"state": "auf"}
+        v_state_soll_alle_auf["V6"] = {"state": "auf"}
+        v_state_soll_alle_auf["V7"] = {"state": "auf"}
+        v_state_soll_alle_auf["V_Prop"] = {"state": "an"}
+        return v_state_soll_alle_auf
+
+
 V = Ventile()
 V.druck_halten(50, 30)
 
-
-def v_state_alle_zu():
-    v_state_soll_alle_zu = {}
-    v_state_soll_alle_zu["V1"] = {"state": "zu"}
-    v_state_soll_alle_zu["V2"] = {"state": "zu"}
-    v_state_soll_alle_zu["V3"] = {"state": "zu"}
-    v_state_soll_alle_zu["V4"] = {"state": "zu"}
-    v_state_soll_alle_zu["V5"] = {"state": "zu"}
-    v_state_soll_alle_zu["V6"] = {"state": "zu"}
-    v_state_soll_alle_zu["V7"] = {"state": "zu"}
-    v_state_soll_alle_zu["V_Prop"] = {"state": "aus"}
-    return v_state_soll_alle_zu
-
-
-def v_state_alle_auf():
-    v_state_soll_alle_auf = {}
-    v_state_soll_alle_auf["V1"] = {"state": "auf"}
-    v_state_soll_alle_auf["V2"] = {"state": "auf"}
-    v_state_soll_alle_auf["V3"] = {"state": "auf"}
-    v_state_soll_alle_auf["V4"] = {"state": "auf"}
-    v_state_soll_alle_auf["V5"] = {"state": "auf"}
-    v_state_soll_alle_auf["V6"] = {"state": "auf"}
-    v_state_soll_alle_auf["V7"] = {"state": "auf"}
-    v_state_soll_alle_auf["V_Prop"] = {"state": "an"}
-    return v_state_soll_alle_auf
 
 
 v_state_soll_Volumen_evak_grob = {}
@@ -303,8 +310,7 @@ def Ablauf_Test1(v_state):
 
 if __name__ == '__main__':
     # folgende Zeilen müssen in self.init kommen
-    v_state_soll_alle_zu = v_state_alle_zu()
-    v_state_soll_alle_auf = v_state_alle_auf()
+
     # v_state = v_state_init()  # state initialisieren, oder zurücksetzen...
 
     # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
@@ -313,3 +319,4 @@ if __name__ == '__main__':
     print(V.state)
     V.to_warten()
     print(V.state)
+    V.run()

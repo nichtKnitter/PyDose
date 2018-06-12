@@ -26,23 +26,26 @@ Bedienung
 
 
 
-
- *asterisks*   
- _underscores_ 
- **asterisks** 
- **asterisks  _underscores_**
+ 
+ ## Arbeit
+ ###Präsentationen: 
+ 1) Graphik der States erstellen, 
+ + dazu pygraphviz installieren und 
+ + pip install pygraphviz  # install pygraphviz manually...
+ + pip install transitions[diagrams]  # ... or install transitions with 'diagrams' extras
++ Scheitert gerade an compilieren von Pygraphviz
  
  
  
- 
- 
- 
- 
-* Unordered sub-list. 
-- Or minuses
-+ Or pluses
-
+---
+###Vorlagen
 Markdown | Less | Pretty
 --- | --- | ---
 *Still* | `renders` | **nicely**
 1 | 2 | 3
+
+
+ *asterisks* = _underscores_ 
+ **fett** 
+ `hinterlegt` 
+ 

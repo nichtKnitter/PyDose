@@ -53,7 +53,13 @@ class Ventile(object):
             time_s = time.time()
             pp.pprint(time.time())
 
-            self.machine.states
+            # -> Messen ->
+            # -> run (Entscheiden)
+            #   if bedingung = True
+            #       <-> Schalten
+            #       <-> Speichern
+            #       <-> Anzeigen
+            # -> Warten
 
             self.solldruck = 56  # aus segmentconfig uebernehem
             # Todo: hier in den state messen wechseln

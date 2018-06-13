@@ -2,7 +2,12 @@
 
 ## sonstiges
 + gitlab
++ -- warte auf email code
 + Imago 500 reparieren
++ 
+
+evtl. machine vererben, um auf state zugreifen zu können?
++ super(Ventil)
 
 ## Ventilsteuerung
 * Ventilsteuerung in Klasse umwandeln
@@ -26,6 +31,7 @@ Darstellung
 Bedienung
 * Manuelle Ventilcontrolle
 * Fenster ? Zur Messprogrammierung
+* Table input Fenster zur Programmierung
 
 ## Auswertung/Berechnung
 
@@ -50,12 +56,15 @@ auswertung
  
  
  ## MasterArbeit
- ###Präsentationen: 
- 1) Graphik der States erstellen, 
+Graphik der States erstellen, 
  + dazu pygraphviz installieren und 
  + pip install pygraphviz  # install pygraphviz manually...
  + pip install transitions[diagrams]  # ... or install transitions with 'diagrams' extras
 + Scheitert gerade an compilieren von Pygraphviz
+
+Schreiben
++ 2 Monate? Parallel?
++ lieber puffer
 
  
 ---

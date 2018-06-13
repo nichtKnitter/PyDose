@@ -16,7 +16,7 @@ class VDummyKlasse(object):
 from transitions import Machine
 
 
-class localRobot():
+class localRobot(Segmentart='halten', pSoll=0, TSoll=20, TimeMax=5):
     Messkarte = VDummyKlasse()
     states = ['s1', 's2', 'gas', 'plasma']
     transitions = [
@@ -49,18 +49,7 @@ class localRobot():
         self.Messkarte.schalten2()
         print('is plasma: ', self.Messkarte.is_plasma())
 
-    def Ablauf1(self):
-        self.schalten_hoch()
-        self.schalten_2()
-        self.schalten_hoch()
-        self.schalten_3()
-        self.schalten_hoch()
-        self.schalten_2()
 
-        self.schalten_hoch()
-        self.schalten_2()
-    # print('test',Messkarte.schalten2())
-    # print(Messkarte.schalten1())
 
 
 #########################################
@@ -68,31 +57,31 @@ class localRobot():
 ########################################
 
 class GlobalRobot():
-
+    states = ['THochIsobar', 'TRunterIsobar', 'pHochIsotherm', 'gemischt', 'pRunterIsotherm', 'aktivierung']
+    localRobotObj = localRobot()
+    timestart = time.time()
     def los(self):
         print('Robot.Messkarte.state\t', localRobot.Messkarte.state)
         # Robot.Messkarte.schalten2()
         # Robot.Messkarte.schalten1()
-        test = localRobot()
-        timestart = time.time()
         while time.time() - timestart < 5:
-            test.Messkarte.state
-            test.Messkarte.schalten2()
+            localRobotObj.Messkarte.state
+            localRobotObj.Messkarte.schalten2()
 
             #
-            # test.schalten_hoch()
-            # test.schalten_runter()
-            test.Ablauf1()
-            test.Messkarte.to_plasma()
-            print(test.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-            test.Messkarte.to_s2()
-            print(test.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            # localRobotObj.schalten_hoch()
+            # localRobotObj.schalten_runter()
+            localRobotObj.Ablauf1()
+            localRobotObj.Messkarte.to_plasma()
+            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            localRobotObj.Messkarte.to_s2()
+            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
-            test.Messkarte.schalten2()
-            print(test.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            localRobotObj.Messkarte.schalten2()
+            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
-            test.Messkarte.to_s1()
-            print(test.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            localRobotObj.Messkarte.to_s1()
+            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
             ### hier aussen die warteschleife implementieren?
             time.sleep(1)

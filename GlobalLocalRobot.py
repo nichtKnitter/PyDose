@@ -16,7 +16,9 @@ class VDummyKlasse(object):
 from transitions import Machine
 
 
-class localRobot(Segmentart='halten', pSoll=0, TSoll=20, TimeMax=5):
+class localRobot():
+    # class localRobot(Segmentart='halten', pSoll=0, TSoll=20, TimeMax=5):
+
     Messkarte = VDummyKlasse()
     states = ['s1', 's2', 'gas', 'plasma']
     transitions = [
@@ -64,24 +66,24 @@ class GlobalRobot():
         print('Robot.Messkarte.state\t', localRobot.Messkarte.state)
         # Robot.Messkarte.schalten2()
         # Robot.Messkarte.schalten1()
-        while time.time() - timestart < 5:
-            localRobotObj.Messkarte.state
-            localRobotObj.Messkarte.schalten2()
+        while time.time() - self.timestart < 5:
+            self.localRobotObj.Messkarte.state
+            self.localRobotObj.Messkarte.schalten2()
 
             #
             # localRobotObj.schalten_hoch()
             # localRobotObj.schalten_runter()
-            localRobotObj.Ablauf1()
-            localRobotObj.Messkarte.to_plasma()
-            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-            localRobotObj.Messkarte.to_s2()
-            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
-            localRobotObj.Messkarte.schalten2()
-            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            self.localRobotObj.Messkarte.to_plasma()
+            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            self.localRobotObj.Messkarte.to_s2()
+            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
-            localRobotObj.Messkarte.to_s1()
-            print(localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+            self.localRobotObj.Messkarte.schalten2()
+            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
+
+            self.localRobotObj.Messkarte.to_s1()
+            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
             ### hier aussen die warteschleife implementieren?
             time.sleep(1)

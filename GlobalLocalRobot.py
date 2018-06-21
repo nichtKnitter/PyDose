@@ -15,7 +15,9 @@ class VDummyKlasse(object):
 
 from transitions import Machine
 
-
+#########################################
+####### Local Robot
+########################################
 class localRobot():
     # class localRobot(Segmentart='halten', pSoll=0, TSoll=20, TimeMax=5):
 
@@ -59,15 +61,27 @@ class localRobot():
 ########################################
 
 class GlobalRobot():
-    states = ['THochIsobar', 'TRunterIsobar', 'pHochIsotherm', 'gemischt', 'pRunterIsotherm', 'aktivierung']
+    states = ['THochIsobar', 'TRunterIsobar', 'pHochIsotherm', 'gemischt', 'pRunterIsotherm', 'Ausheizen','NA']
+    currentState = ['NA']
     localRobotObj = localRobot()
     timestart = time.time()
     def los(self):
-        print('Robot.Messkarte.state\t', localRobot.Messkarte.state)
-        # Robot.Messkarte.schalten2()
-        # Robot.Messkarte.schalten1()
         while time.time() - self.timestart < 5:
-            self.localRobotObj.Messkarte.state
+            ### hier aussen die warteschleife implementieren?
+            # 0. Messen
+            # 1. segmentstate mit segmentsollstate abgleichen
+            # bei Änderung vsoll, timeSoll, wunschstate,
+            # 2. in jeweilige regelstrategie gehen
+            #       jeweilige stellparameter berechnen
+            #       schalten
+
+            # assert machine.get_state(hero.state).is_busy  # We are at home and busy
+            # assert hero.state == 'away'  # Impatient superhero already left the building
+            # assert machine.get_state(hero.state).is_home is False  # Yupp, not at home anymore
+            print('1 Robot.Messkarte.state\t', localRobot.Messkarte.state)
+            # Robot.Messkarte.schalten2()
+            # Robot.Messkarte.schalten1()
+            print('2 Robot.Messkarte.state\t', self.localRobotObj.Messkarte.state)
             self.localRobotObj.Messkarte.schalten2()
 
             #
@@ -85,18 +99,8 @@ class GlobalRobot():
             self.localRobotObj.Messkarte.to_s1()
             print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
 
-            ### hier aussen die warteschleife implementieren?
             time.sleep(1)
-            # 0. Messen
-            # 1. segmentstate mit segmentsollstate abgleichen
-            # bei Änderung vsoll, timeSoll, wunschstate,
-            # 2. in jeweilige regelstrategie gehen
-            #       jeweilige stellparameter berechnen
-            #       schalten
 
-            # assert machine.get_state(hero.state).is_busy  # We are at home and busy
-            # assert hero.state == 'away'  # Impatient superhero already left the building
-            # assert machine.get_state(hero.state).is_home is False  # Yupp, not at home anymore
 
 
 Hauptrechner = GlobalRobot()

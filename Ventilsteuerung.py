@@ -45,7 +45,7 @@ class Ventile(object):
         self.Ventil_zu = [False, True]
         self.Ventil_aus = [True, True]
 
-        self.machine = Machine(model=self, states=Ventile.states, initial='reset')
+        self.machine = Machine(model=self, states=Ventile.statesAblauf, initial='reset')
 
         self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
         self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
@@ -62,6 +62,7 @@ class Ventile(object):
 
 
     def run(self):
+        timeStart = time.time()
         while True:
             time.sleep(self.Takt_s)
             time_s = time.time()
@@ -79,8 +80,8 @@ class Ventile(object):
             # Todo: hier in den state messen wechseln
             # Messen(Next_state)
             print("self.druck = readSensors()")
-            print(Ventile.states)
-            time_s = 20
+            print(Ventile.statesAblauf)
+            if (time_s - timeStart > 3): break
             # if time_s < (self.druck - 1) or next_segment == True:
             #     # or max zeit or user event
             #     break
@@ -134,7 +135,7 @@ class Ventile(object):
                     (VentilTask.write(Befehl))
                     self.v_state["V_Prop"]["state"] = Befehl_in
                     pp.pprint("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                    pp.pprint("in Ventil.task", v_state["V_Prop"])
+                    pp.pprint("in Ventil.task", self.v_state["V_Prop"])
                 except nidaqmx.DaqError as e:
                     pp.pprint(e)
 
@@ -187,16 +188,15 @@ class Ventile(object):
 
     def alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
-        self.v_state = self.Ventil_schalten_einzeln("V1", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V2", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V3", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V4", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V5", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V6", "aus", self.v_state, False)
-        self.v_state = self.Ventil_schalten_einzeln("V7", "aus", self.v_state, False)
-        return (self.v_state)
+        self.v_state = self.Ventil_schalten_einzeln("V1", "aus", False)
+        self.v_state = self.Ventil_schalten_einzeln("V2", "aus",  False)
+        self.v_state = self.Ventil_schalten_einzeln("V3", "aus",  False)
+        self.v_state = self.Ventil_schalten_einzeln("V4", "aus",  False)
+        self.v_state = self.Ventil_schalten_einzeln("V5", "aus",  False)
+        self.v_state = self.Ventil_schalten_einzeln("V6", "aus",  False)
+        self.v_state = self.Ventil_schalten_einzeln("V7", "aus",  False)
 
-    def Ventil_schalten_einzeln(self, Ventil_name, Befehl_in, v_state, einzeln_deaktivieren=True):
+    def Ventil_schalten_einzeln(self, Ventil_name, Befehl_in, einzeln_deaktivieren=True):
         # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?
 
         Ventiladresse = self.Ventiladressen(Ventil_name)
@@ -208,7 +208,7 @@ class Ventile(object):
             Befehl = self.Ventil_aus
 
         if (Befehl_in == "auf" or Befehl_in == "zu"):
-            if (v_state[Ventil_name][
+            if (self.v_state[Ventil_name][
                 "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
@@ -216,24 +216,24 @@ class Ventile(object):
                     VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
                     try:
                         (VentilTask.write(Befehl))
-                        v_state[Ventil_name]["active"] = True
-                        v_state[Ventil_name]["state"] = Befehl_in
+                        self.v_state[Ventil_name]["active"] = True
+                        self.v_state[Ventil_name]["state"] = Befehl_in
                         print("Ventil:\t", Ventil_name, "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                        print("in Ventil.task", v_state[Ventil_name])
+                        print("in Ventil.task", self.v_state[Ventil_name])
                     except nidaqmx.DaqError as e:
                         print(e)
         if (Befehl_in == "aus"):
-            if (v_state[Ventil_name]["active"] != False):
+            if (self.v_state[Ventil_name]["active"] != False):
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
                     # print(Ventil_id, Befehl)
                     VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
                     try:
                         (VentilTask.write(self.Ventil_aus))  # beide kanäle an, wird nie gebaucht
-                        v_state[Ventil_name]["active"] = False
+                        self.v_state[Ventil_name]["active"] = False
                         # v_state[Ventil_name]["state"] = "aus"
                         print("Ventil:\t", Ventil_name, "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                        print("in Ventil.task", v_state[Ventil_name])
+                        print("in Ventil.task", self.v_state[Ventil_name])
                     except nidaqmx.DaqError as e:
                         print(e)
         if (einzeln_deaktivieren == True and Befehl_in != "aus"):
@@ -244,12 +244,11 @@ class Ventile(object):
                 VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
                 try:
                     (VentilTask.write(self.Ventil_aus))  # beide kanäle an, wird nie gebaucht
-                    v_state[Ventil_name]["active"] = False
+                    self.v_state[Ventil_name]["active"] = False
                     print("Ventil:\t", Ventil_name, "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                    print("in Ventil.task", v_state[Ventil_name])
+                    print("in Ventil.task", self.v_state[Ventil_name])
                 except nidaqmx.DaqError as e:
                     print(e)
-        return (v_state)
 
     def Ventiladressen(self, Ventil_name):  # Todo: durch dict ersetzen
         if (Ventil_name == "V1"):
@@ -282,46 +281,43 @@ class Ventile(object):
         return (Adress)
 
 
-V = Ventile()
+    def Ventile_schalten_ges(self,v_state_soll):
+        # todo: umruesten auf iteration von self.v_state
+        # for blabla in v_state:
+        #     print(blabla)
+        #     print(v_state[blabla])
+        self.v_state = Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
+        self.v_state = Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
+        self.v_state = v_Prop_an_aus( v_state_soll["V_Prop"]["state"])
+        time.sleep(0.5)
+        self.v_state = alle_aus()
+
+
+
+    def Ablauf_Test1(self):
+        print("\n\n\n Vierter Durchlauf")
+        self.v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob)
+        print("\n\n\n Vierter Durchlauf")
+        time.sleep(2)
+        self.v_state = Ventile_schalten_ges(v_state_soll_alle_zu)
+        print("\n\n\n Vierter Durchlauf")
+        time.sleep(2)
+        self.v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob)
+        time.sleep(2)
+        self.v_state = v_Prop_Stellgrad(v_state= self.v_state, Prozent=1)
+        time.sleep(2)
+        self.v_state = v_Prop_Stellgrad(v_state= self.v_state, Prozent=50)
+        time.sleep(2)
+        self.v_state = v_Prop_Stellgrad(v_state= self.v_state, Prozent=70)
+
+
 V.druck_halten(50, 30)
-
-
-def Ventile_schalten_ges(v_state_soll, v_state_in):
-    # todo: umruesten auf iteration von v_state_in
-    # for blabla in v_state:
-    #     print(blabla)
-    #     print(v_state[blabla])
-    v_state_in = Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], v_state_in, False)
-    v_state_in = Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], v_state_in, False)
-    v_state_in = v_Prop_an_aus(v_state_in, v_state_soll["V_Prop"]["state"])
-    time.sleep(0.5)
-    v_state_in = alle_aus(v_state_in)
-    return v_state_in
-
-
-def Ablauf_Test1(v_state):
-    print("\n\n\n Vierter Durchlauf")
-    v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob, v_state)
-    print("\n\n\n Vierter Durchlauf")
-    time.sleep(2)
-    v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
-    print("\n\n\n Vierter Durchlauf")
-    time.sleep(2)
-    v_state = Ventile_schalten_ges(v_state_soll_Volumen_evak_grob, v_state)
-    time.sleep(2)
-    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=1)
-    time.sleep(2)
-    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=50)
-    time.sleep(2)
-    v_state = v_Prop_Stellgrad(v_state=v_state, Prozent=70)
-    return v_state
-
-
+V = Ventile()
 V = Ventile()
 
 

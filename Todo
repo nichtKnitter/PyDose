@@ -74,6 +74,8 @@ Schreiben
 ---
 
 ###Vorlagen
+ https://purplepalmdash.github.io/2014/02/26/converting-markdown-into-pdf-under-archlinux/
+https://kevin.deldycke.com/2012/01/how-to-generate-pdf-markdown
 
 Markdown | Less | Pretty
 --- | --- | ---
@@ -85,3 +87,16 @@ Markdown | Less | Pretty
  **fett** 
  `hinterlegt` 
  
+
+
+sddddd\aaaaaaa
+> hjkkjs
+>> nkllsnln
+>>> lmlö
+
+inline`code` oder 
+
+    eigezogen oder
+
+```code```
+

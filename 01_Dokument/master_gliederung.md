@@ -1,16 +1,3 @@
-https://purplepalmdash.github.io/2014/02/26/converting-markdown-into-pdf-under-archlinux/
-https://kevin.deldycke.com/2012/01/how-to-generate-pdf-markdown
-/
-sddddd\aaaaaaa
-> hjkkjs
->> nkllsnln
->>> lmlö
-
-inline'code' oder 
-
-    eigezogen oder
-
-'''code'''
 
 
 ### Anforderungen
@@ -27,7 +14,7 @@ Musskriterien
     - Bereich
     - Regelverhalten
         - Überschwinger
-        - Geschrindigkeit
+        - Geschwindigkeit
 
 Sollkriterien
 + Volumetrisch
@@ -49,16 +36,16 @@ Weiche Kriteriien (besseres Wort?)
 
 ## Layout-Konzept
 
-### + Kontiniuierlich
+### Kontiniuierlich
 Graph + Erklärungen
 
-### + Volumetrisch
+### Volumetrisch
 Graph + Erklärungen
 
-### + combined expanded
+### combined expanded
 Graph + Erklärungen
 
-### + combined compressed
+### c-ombined compressed
 Graph + Erklärungen
 
 ### Zusammenfassung
@@ -109,9 +96,13 @@ Lösung/ Auswahl
 + Viele Ausgänge nötig wegen Ventilen
 + billige Relaiskarten
 
-### Sicherunen
+### Sicherheitskonzept
+Sicherungen Strom
+
 + Einzeln Abgesichert
 + Dimesionierung
+
+Sicherung Temperatur
 
 ### Heizungsregler
 + Solid Relay

@@ -1,3 +1,16 @@
+https://purplepalmdash.github.io/2014/02/26/converting-markdown-into-pdf-under-archlinux/
+https://kevin.deldycke.com/2012/01/how-to-generate-pdf-markdown
+/
+sddddd\aaaaaaa
+> hjkkjs
+>> nkllsnln
+>>> lmlö
+
+inline'code' oder 
+
+    eigezogen oder
+
+'''code'''
 
 
 ### Anforderungen
@@ -14,7 +27,7 @@ Musskriterien
     - Bereich
     - Regelverhalten
         - Überschwinger
-        - Geschwindigkeit
+        - Geschrindigkeit
 
 Sollkriterien
 + Volumetrisch
@@ -36,16 +49,16 @@ Weiche Kriteriien (besseres Wort?)
 
 ## Layout-Konzept
 
-### Kontiniuierlich
+### + Kontiniuierlich
 Graph + Erklärungen
 
-### Volumetrisch
+### + Volumetrisch
 Graph + Erklärungen
 
-### combined expanded
+### + combined expanded
 Graph + Erklärungen
 
-### c-ombined compressed
+### + combined compressed
 Graph + Erklärungen
 
 ### Zusammenfassung
@@ -71,19 +84,11 @@ Lösung/ Auswahl
 + Bistabile Magnetvenile
 
 ### Sensoren
-+ 2* 100 mbar Brooks barometrisch
-+ optional: 1 bar Sensor + 1 mbar Sensor wären gut. 
 
 ### Verbinder + Rohre
-+ Klemmringverschraubungen
-+ 1/4 Zoll, weil Zusatzkomponenten meisst auf diesem Standard
-+ Adapter zu Sesnoren VCR mit Metalldichtring
-
 
 ### Heizung
-+ Schaltschrankheizung
-+ 300 W?
-+ mit Eingebauten Lüfter
+
 
 ## Umsetzung
 
@@ -100,24 +105,17 @@ Lösung/ Auswahl
 + Analogausgänge
 + Treiberunterstützung 
 
-### Ventilansteuerung
-+ zwei Spulen, Verschaltung
-+ billige Relaiskarten
+### Relaiskarten
 + Viele Ausgänge nötig wegen Ventilen
++ billige Relaiskarten
 
-### Sicherheitskonzept
-Sicherungen Strom
-
+### Sicherunen
 + Einzeln Abgesichert
 + Dimesionierung
-
-Sicherung Temperatur
 
 ### Heizungsregler
 + Solid Relay
 + Eurotherm Regler
-+ Elektrische Verbindung
-+ 
 
 ### Sensoren/Sensorerfassung
 

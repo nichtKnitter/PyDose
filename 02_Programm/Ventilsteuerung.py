@@ -36,7 +36,7 @@ class Ventile(object):
 
 
     def __init__(self):
-        self.v_state = self.vSstateInit()
+        self.v_state = self._vSstateInit()
         self.Takt_s = 1
         self.solldruck = 5600
         self.druck = 56
@@ -55,9 +55,9 @@ class Ventile(object):
         # States:
         # nur zum initialisieren, macht nichts wenn ich methoden überschreibe
         self.v_soll_alle_zu = self.vStateAlleZu()
-        self.v_soll_alle_auf = self.vStateAlleAuf()
-        self.vSollAlleAus = self.alle_aus()
-        self.v_state_soll_Volumen_evak_grob = self.vStateSollVolumenEvakGrob()
+        self.v_soll_alle_auf = self._vStateAlleAuf()
+        self.vSollAlleAus = self._alle_aus()
+        self.v_state_soll_Volumen_evak_grob = self._vStateSollVolumenEvakGrob()
         # self.vStateSollAlleAuf = self.vStateAlleAuf()
 
 
@@ -102,7 +102,7 @@ class Ventile(object):
         umax = 5  # V
         umin = 0  # V
         usoll = ((umax - umin) / 100) * Prozent
-        Ventiladresse = self.Ventiladressen("V_PropStellgrad")
+        Ventiladresse = self._Ventiladressen("V_PropStellgrad")
         print('test4\t',Ventiladresse)
 
         with nidaqmx.Task() as VentilTask:
@@ -124,7 +124,7 @@ class Ventile(object):
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
         Ventil_aus = [False]
-        Ventiladresse = self.Ventiladressen("V_PropOnOff")
+        Ventiladresse = self._Ventiladressen("V_PropOnOff")
         if (Befehl_in == "an"):
             Befehl = Ventil_an
         if (Befehl_in == "aus"):
@@ -153,7 +153,7 @@ class Ventile(object):
         self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
         return self.vStateSollAlleZu
 
-    def vSstateInit(self):
+    def _vSstateInit(self):
         self.v_state = {}
         self.v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
         self.v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
@@ -165,7 +165,7 @@ class Ventile(object):
         self.v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
         return self.v_state
 
-    def vStateAlleAuf(self):
+    def _vStateAlleAuf(self):
         self.vStateSollAlleAuf = {}
         self.vStateSollAlleAuf["V1"] = {"state": "auf"}
         self.vStateSollAlleAuf["V2"] = {"state": "auf"}
@@ -176,7 +176,7 @@ class Ventile(object):
         self.vStateSollAlleAuf["V7"] = {"state": "auf"}
         self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
 
-    def vStateSollVolumenEvakGrob(self):
+    def _vStateSollVolumenEvakGrob(self):
         self.vStateSollVolumenEvakGrob = {}
         self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
         self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
@@ -188,7 +188,7 @@ class Ventile(object):
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
         return self.vStateSollVolumenEvakGrob
 
-    def alle_aus(self):
+    def _alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
         self.Ventil_schalten_einzeln("V1", "aus", False)
         self.Ventil_schalten_einzeln("V2", "aus", False)
@@ -201,7 +201,7 @@ class Ventile(object):
     def Ventil_schalten_einzeln(self, Ventil_name, Befehl_in, einzeln_deaktivieren=True):
         # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?
 
-        Ventiladresse = self.Ventiladressen(Ventil_name)
+        Ventiladresse = self._Ventiladressen(Ventil_name)
         if (Befehl_in == "auf"):
             Befehl = self.ventil_auf
         if (Befehl_in == "zu"):
@@ -257,7 +257,7 @@ class Ventile(object):
                 except nidaqmx.DaqError as e:
                     print(e)
 
-    def Ventiladressen(self, Ventil_name):  # Todo: durch dict ersetzen
+    def _Ventiladressen(self, Ventil_name):  # Todo: durch dict ersetzen
         if (Ventil_name == "V1"):
             Adress = 'Dev1/port2/line0:1'
             Ventilfunktion = "Pumpe"
@@ -287,7 +287,6 @@ class Ventile(object):
         # print(Ventil_name, ":\t", Ventilfunktion, "\tAdresse:\t", Adress)
         return (Adress)
 
-
     def Ventile_schalten_ges(self,v_state_soll):
         # todo: umruesten auf iteration von self.v_state
         # for blabla in v_state:
@@ -303,9 +302,7 @@ class Ventile(object):
         print('test3/t', v_state_soll["V_Prop"]["state"])
         self.vPropAnAus( v_state_soll["V_Prop"]["state"])
         time.sleep(0.5)
-        self.alle_aus()
-
-
+        self._alle_aus()
 
     def Ablauf_Test1(self):
         print("\n\n\n Vierter Durchlauf")
@@ -329,12 +326,7 @@ class Ventile(object):
 
 
 if __name__ == '__main__':
-    # folgende Zeilen müssen in self.init kommen
 
-    # v_state = v_state_init()  # state initialisieren, oder zurücksetzen...
-
-    # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
-    # Ablauf_Test1(v_state)
     V = Ventile()
     V.to_Messen()
     print(V.state)

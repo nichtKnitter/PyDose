@@ -188,13 +188,13 @@ class Ventile(object):
 
     def alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
-        self.v_state = self.Ventil_schalten_einzeln("V1", "aus", False)
-        self.v_state = self.Ventil_schalten_einzeln("V2", "aus",  False)
-        self.v_state = self.Ventil_schalten_einzeln("V3", "aus",  False)
-        self.v_state = self.Ventil_schalten_einzeln("V4", "aus",  False)
-        self.v_state = self.Ventil_schalten_einzeln("V5", "aus",  False)
-        self.v_state = self.Ventil_schalten_einzeln("V6", "aus",  False)
-        self.v_state = self.Ventil_schalten_einzeln("V7", "aus",  False)
+        self.Ventil_schalten_einzeln("V1", "aus", False)
+        self.Ventil_schalten_einzeln("V2", "aus", False)
+        self.Ventil_schalten_einzeln("V3", "aus", False)
+        self.Ventil_schalten_einzeln("V4", "aus", False)
+        self.Ventil_schalten_einzeln("V5", "aus", False)
+        self.Ventil_schalten_einzeln("V6", "aus", False)
+        self.Ventil_schalten_einzeln("V7", "aus", False)
 
     def Ventil_schalten_einzeln(self, Ventil_name, Befehl_in, einzeln_deaktivieren=True):
         # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?

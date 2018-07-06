@@ -223,6 +223,11 @@ class Ventile(object):
                     except nidaqmx.DaqError as e:
                         print(e)
         if (Befehl_in == "aus"):
+            print(self.v_state)
+            print(Ventil_name)
+            print(self.v_state[Ventil_name])
+            print("test ,", self.v_state[Ventil_name]["active"])
+            print("test2\t", self.v_state[Ventil_name]["active"] != False)  # ist True
             if (self.v_state[Ventil_name]["active"] != False):
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
@@ -316,9 +321,7 @@ class Ventile(object):
         self.v_state = v_Prop_Stellgrad(v_state= self.v_state, Prozent=70)
 
 
-V.druck_halten(50, 30)
-V = Ventile()
-V = Ventile()
+
 
 
 
@@ -329,8 +332,12 @@ if __name__ == '__main__':
 
     # v_state = Ventile_schalten_ges(v_state_soll_alle_zu, v_state)
     # Ablauf_Test1(v_state)
+    V = Ventile()
     V.to_Messen()
     print(V.state)
     V.to_warten()
     print(V.state)
     V.run()
+    V.druck_halten(50, 30)
+    V = Ventile()
+    V = Ventile()

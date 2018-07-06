@@ -71,11 +71,19 @@ Lösung/ Auswahl
 + Bistabile Magnetvenile
 
 ### Sensoren
++ 2* 100 mbar Brooks barometrisch
++ optional: 1 bar Sensor + 1 mbar Sensor wären gut. 
 
 ### Verbinder + Rohre
++ Klemmringverschraubungen
++ 1/4 Zoll, weil Zusatzkomponenten meisst auf diesem Standard
++ Adapter zu Sesnoren VCR mit Metalldichtring
+
 
 ### Heizung
-
++ Schaltschrankheizung
++ 300 W?
++ mit Eingebauten Lüfter
 
 ## Umsetzung
 
@@ -92,9 +100,10 @@ Lösung/ Auswahl
 + Analogausgänge
 + Treiberunterstützung 
 
-### Relaiskarten
-+ Viele Ausgänge nötig wegen Ventilen
+### Ventilansteuerung
++ zwei Spulen, Verschaltung
 + billige Relaiskarten
++ Viele Ausgänge nötig wegen Ventilen
 
 ### Sicherheitskonzept
 Sicherungen Strom
@@ -107,6 +116,8 @@ Sicherung Temperatur
 ### Heizungsregler
 + Solid Relay
 + Eurotherm Regler
++ Elektrische Verbindung
++ 
 
 ### Sensoren/Sensorerfassung
 

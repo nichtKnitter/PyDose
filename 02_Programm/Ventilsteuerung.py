@@ -36,7 +36,9 @@ class Ventile(object):
 
 
     def __init__(self):
-        self.v_state = self._vSstateInit()
+        # self.v_state = \
+        self.__initVentilStates()
+        # self._vSstateInit()
         self.Takt_s = 1
         self.solldruck = 5600
         self.druck = 56
@@ -53,13 +55,56 @@ class Ventile(object):
         self.machine.add_transition("messen_stop", source="messen", dest='warten')
 
         # States:
-        # nur zum initialisieren, macht nichts wenn ich methoden überschreibe
-        self.v_soll_alle_zu = self.vStateAlleZu()
-        self.v_soll_alle_auf = self._vStateAlleAuf()
-        self.vSollAlleAus = self._alle_aus()
-        self.v_state_soll_Volumen_evak_grob = self._vStateSollVolumenEvakGrob()
-        # self.vStateSollAlleAuf = self.vStateAlleAuf()
+        self.__initVentilStates()
+        self.v_state = self.vSstateInit
 
+    def __initVentilStates(self):
+        # def _vStateAlleZu(self):
+        self.vStateSollAlleZu = {}
+        self.vStateSollAlleZu["V1"] = {"state": "zu"}
+        self.vStateSollAlleZu["V2"] = {"state": "zu"}
+        self.vStateSollAlleZu["V3"] = {"state": "zu"}
+        self.vStateSollAlleZu["V4"] = {"state": "zu"}
+        self.vStateSollAlleZu["V5"] = {"state": "zu"}
+        self.vStateSollAlleZu["V6"] = {"state": "zu"}
+        self.vStateSollAlleZu["V7"] = {"state": "zu"}
+        self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
+            # return self.vStateSollAlleZu
+
+        # def _vSstateInit(self):
+        self.vSstateInit = {}
+        self.vSstateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
+        self.vSstateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
+        self.vSstateInit["V3"] = {"id": 3, "state": "NA", "active": "NA"}
+        self.vSstateInit["V4"] = {"id": 4, "state": "NA", "active": "NA"}
+        self.vSstateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
+        self.vSstateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
+        self.vSstateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
+        self.vSstateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
+            # return self.v_state/
+
+        # def _vStateAlleAuf(self):
+        self.vStateSollAlleAuf = {}
+        self.vStateSollAlleAuf["V1"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V2"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V3"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V4"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V5"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V6"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V7"] = {"state": "auf"}
+        self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
+
+        # def _vStateSollVolumenEvakGrob(self):
+        self.vStateSollVolumenEvakGrob = {}
+        self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V3"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V4"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V5"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
+            # return self.vStateSollVolumenEvakGrob
 
 
     def run(self):
@@ -121,6 +166,17 @@ class Ventile(object):
 
     # Ab hier Statedefinitionen
 
+    def _alle_aus(self):
+        # todo: umruesten auf iteration von v_state_in
+        self.Ventil_schalten_einzeln("V1", "aus", False)
+        self.Ventil_schalten_einzeln("V2", "aus", False)
+        self.Ventil_schalten_einzeln("V3", "aus", False)
+        self.Ventil_schalten_einzeln("V4", "aus", False)
+        self.Ventil_schalten_einzeln("V5", "aus", False)
+        self.Ventil_schalten_einzeln("V6", "aus", False)
+        self.Ventil_schalten_einzeln("V7", "aus", False)
+
+
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
         Ventil_aus = [False]
@@ -141,64 +197,8 @@ class Ventile(object):
                 except nidaqmx.DaqError as e:
                     print(e)
 
-    def vStateAlleZu(self):
-        self.vStateSollAlleZu = {}
-        self.vStateSollAlleZu["V1"] = {"state": "zu"}
-        self.vStateSollAlleZu["V2"] = {"state": "zu"}
-        self.vStateSollAlleZu["V3"] = {"state": "zu"}
-        self.vStateSollAlleZu["V4"] = {"state": "zu"}
-        self.vStateSollAlleZu["V5"] = {"state": "zu"}
-        self.vStateSollAlleZu["V6"] = {"state": "zu"}
-        self.vStateSollAlleZu["V7"] = {"state": "zu"}
-        self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
-        return self.vStateSollAlleZu
 
-    def _vSstateInit(self):
-        self.v_state = {}
-        self.v_state["V1"] = {"id": 1, "state": "NA", "active": "NA"}
-        self.v_state["V2"] = {"id": 2, "state": "NA", "active": "NA"}
-        self.v_state["V3"] = {"id": 3, "state": "NA", "active": "NA"}
-        self.v_state["V4"] = {"id": 4, "state": "NA", "active": "NA"}
-        self.v_state["V5"] = {"id": 5, "state": "NA", "active": "NA"}
-        self.v_state["V6"] = {"id": 6, "state": "NA", "active": "NA"}
-        self.v_state["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-        self.v_state["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
-        return self.v_state
-
-    def _vStateAlleAuf(self):
-        self.vStateSollAlleAuf = {}
-        self.vStateSollAlleAuf["V1"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V2"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V3"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V4"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V5"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V6"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V7"] = {"state": "auf"}
-        self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
-
-    def _vStateSollVolumenEvakGrob(self):
-        self.vStateSollVolumenEvakGrob = {}
-        self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
-        self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V3"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V4"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V5"] = {"state": "auf"}
-        self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
-        return self.vStateSollVolumenEvakGrob
-
-    def _alle_aus(self):
-        # todo: umruesten auf iteration von v_state_in
-        self.Ventil_schalten_einzeln("V1", "aus", False)
-        self.Ventil_schalten_einzeln("V2", "aus", False)
-        self.Ventil_schalten_einzeln("V3", "aus", False)
-        self.Ventil_schalten_einzeln("V4", "aus", False)
-        self.Ventil_schalten_einzeln("V5", "aus", False)
-        self.Ventil_schalten_einzeln("V6", "aus", False)
-        self.Ventil_schalten_einzeln("V7", "aus", False)
-
-    def Ventil_schalten_einzeln(self, Ventil_name, Befehl_in, einzeln_deaktivieren=True):
+    def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
         # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?
 
         Ventiladresse = self._Ventiladressen(Ventil_name)
@@ -210,8 +210,11 @@ class Ventile(object):
             Befehl = self.Ventil_aus
 
         if (Befehl_in == "auf" or Befehl_in == "zu"):
-            if (self.v_state[Ventil_name][
-                "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+
+            print(Ventil_name)
+            print(Befehl_in)
+            print(self.v_state)
+            if (self.v_state[Ventil_name]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
                     # print(Ventil_id, Befehl)
@@ -334,5 +337,3 @@ if __name__ == '__main__':
     print(V.state)
     V.run()
     V.druck_halten(50, 30)
-    V = Ventile()
-    V = Ventile()

@@ -104,7 +104,7 @@ class robotStateMachine(object):
             print('.', end='', flush=True)
             self.num = 0
         # result = True if  else False
-        if (time.time() - self.tacktzeit > 5):
+        if (time.time() - self.tacktzeit > 1):
             result = True
             print()
         else:

@@ -1,3 +1,4 @@
+import logging
 import time
 
 import nidaqmx
@@ -9,36 +10,47 @@ from nidaqmx.constants import (LineGrouping)
 # class Machine
 
 class Messkarte(object):
-    # statesAblauf = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
-    #           "warten"]
-    # statesAblauf_aktuell = "NA"
-    #
-    # statesAktionen = ['Messen', 'Schalten', 'Speichern', 'warten']
-    #
-    # next_segment = False
+    # dict zum verfolgen der States der Ventile, damit die nur geschaltet werden wenn es nötig ist.
     v_state = {}
 
-    pProbeMbar = 9999
-    pManifoldMbar = 9999
-
-
+    datenbufferlaenge = 3
+    p1array = []  # pProbeMbar
+    p2array = []  # pManifoldMbar
 
     def __init__(self):
+
+        ##############################################################################
+        # logging optionen
         self.debugOn = True
+        # Create the Logger
+        self.Messkartenlogger = logging.getLogger(__name__)
+        self.Messkartenlogger.setLevel(logging.INFO)
+        # Create the Handler for logging data to a file
+        logger_handler = logging.FileHandler('python_logging.log')
+        logger_handler.setLevel(logging.INFO)
+        # Add the Handler to the Logger
+        self.Messkartenlogger.addHandler(logger_handler)
+        self.Messkartenlogger.info('Completed configuring logger()!')
+
+        ##############################################################################
         self.Takt_s = 1
         self.solldruck = 5600
-        self.druck = 56
 
+        # erstmaliges lesen der sensoren
+        self.readSensors()
+
+        # definition der Relaiszustände für die Ventile pro Kanal
         self.ventil_auf = [True, False]
         self.Ventil_zu = [False, True]
         self.Ventil_aus = [True, True]
 
-        # States:
-        self.__initVentilStates()
-        self.v_state = self.vSstateInit
+        # States initialisiern:
+        self.__initVentilStates()  # sollstates initialisieren
+        self.v_state = self.vSstateInit  # unbekannter ausgangszustand
 
     def __initVentilStates(self):
-        # def _vStateAlleZu(self):
+        # sollstates initialisieren
+
         self.vStateSollAlleZu = {}
         self.vStateSollAlleZu["V1"] = {"state": "zu"}
         self.vStateSollAlleZu["V2"] = {"state": "zu"}
@@ -48,9 +60,7 @@ class Messkarte(object):
         self.vStateSollAlleZu["V6"] = {"state": "zu"}
         self.vStateSollAlleZu["V7"] = {"state": "zu"}
         self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
-            # return self.vStateSollAlleZu
 
-        # def _vSstateInit(self):
         self.vSstateInit = {}
         self.vSstateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
         self.vSstateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
@@ -60,9 +70,7 @@ class Messkarte(object):
         self.vSstateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
         self.vSstateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
         self.vSstateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
-            # return self.v_state/
 
-        # def _vStateAlleAuf(self):
         self.vStateSollAlleAuf = {}
         self.vStateSollAlleAuf["V1"] = {"state": "auf"}
         self.vStateSollAlleAuf["V2"] = {"state": "auf"}
@@ -73,7 +81,6 @@ class Messkarte(object):
         self.vStateSollAlleAuf["V7"] = {"state": "auf"}
         self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
 
-        # def _vStateSollVolumenEvakGrob(self):
         self.vStateSollVolumenEvakGrob = {}
         self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
         self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
@@ -83,18 +90,28 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
-        # return self.vStateSollVolumenEvakGrob
 
     def readSensors(self):
-        self.druck = print("Sensoren lesen")
+        # sensoren auslesen. bisher nur zwei stück
         with nidaqmx.Task() as LeseTask:
-            LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:1",
+            LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:4",
                                                      terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
                                                      max_val=10,
                                                      min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
             data = LeseTask.read()
-            # time.sleep(0.1)
-            print(data)
+
+        # daten in arrays abspeichern, mit fester Pufferlaenge
+        # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
+        self.p1array.append(data[0])
+        self.p2array.append(data[1])
+
+        # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
+        if len(self.p1array) > self.datenbufferlaenge:
+            self.p1array.pop(0)
+            self.p2array.pop(0)
+
+        print(self.p1array)
+        print(self.p2array)
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
@@ -137,7 +154,6 @@ class Messkarte(object):
             except nidaqmx.DaqError as e:
                 print(e)
         return self.v_state
-
 
     def _alle_aus(self):
         # todo: umruesten auf iteration von v_state_in

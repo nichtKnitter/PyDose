@@ -1,38 +1,26 @@
-# altes nidaqmx beispiel für ventile
-
-import pprint
+import time
 
 import nidaqmx
 from nidaqmx.constants import (LineGrouping)
-
-pp = pprint.PrettyPrinter(indent=4)
-import time
-
-from transitions import Machine
-
-# Set up logging; The basic log level will be DEBUG
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-# Set transitions' log level to INFO; DEBUG messages will be omitted
-logging.getLogger('transitions').setLevel(logging.INFO)
 
 
 # from transitions.extensions import GraphMachine as Machine
 
 # class Machine
 
-class Ventile(object):
-    statesAblauf = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
-              "warten"]
-    statesAblauf_aktuell = "NA"
-
-    statesAktionen = ['Messen', 'Schalten', 'Speichern', 'warten']
-
-    next_segment = False
+class Messkarte(object):
+    # statesAblauf = ['evakuieren_grob', 'druck_halten', 'druck_erhoehen', 'druck_veringern', 'aus', 'reset', "Messen",
+    #           "warten"]
+    # statesAblauf_aktuell = "NA"
+    #
+    # statesAktionen = ['Messen', 'Schalten', 'Speichern', 'warten']
+    #
+    # next_segment = False
     v_state = {}
 
-    machine_test = Machine()
+    pProbeMbar = 9999
+    pManifoldMbar = 9999
+
 
 
     def __init__(self):
@@ -44,13 +32,6 @@ class Ventile(object):
         self.ventil_auf = [True, False]
         self.Ventil_zu = [False, True]
         self.Ventil_aus = [True, True]
-
-        # self.machine = Machine(model=self, states=Ventile.statesAblauf, initial='reset')
-        #
-        # self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
-        # self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
-        # self.machine.add_transition("messen_start", source="warten", dest='messen')
-        # self.machine.add_transition("messen_stop", source="messen", dest='warten')
 
         # States:
         self.__initVentilStates()
@@ -102,43 +83,17 @@ class Ventile(object):
         self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
-            # return self.vStateSollVolumenEvakGrob
-
-
-    def run(self):
-        timeStart = time.time()
-        while True:
-            time.sleep(self.Takt_s)
-            time_s = time.time()
-            pp.pprint(time.time())
-
-            # -> Messen ->
-            # -> run (Entscheiden)
-            #   if bedingung = True
-            #       <-> Schalten
-            #       <-> Speichern
-            #       <-> Anzeigen
-            # -> Warten
-
-            self.solldruck = 56  # aus segmentconfig uebernehem
-            # Todo: hier in den state messen wechseln
-            # Messen(Next_state)
-            print("self.druck = readSensors()")
-            print(Ventile.statesAblauf)
-            if (time_s - timeStart > 3): break
-            # if time_s < (self.druck - 1) or next_segment == True:
-            #     # or max zeit or user event
-            #     break
-
-    def druck_halten(self, solldruck, time_s):
-        self.machine.set_state("druck_halten")
-        print("Ventile schalten")
-        print(solldruck)
-
-        # if abs(solldruck - self.druck)> self.delta_p:
+        # return self.vStateSollVolumenEvakGrob
 
     def readSensors(self):
         self.druck = print("Sensoren lesen")
+        with nidaqmx.Task() as VentilTask:
+            VentilTask.ai_channels.add_ai_voltage_chan("Dev1/ai0",
+                                                       terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
+                                                       max_val=10,
+                                                       min_val=0, )  # terminal_config=VentilTask.TerminalConfiguration.NRSE
+            data = VentilTask.read()
+            print(data)
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
@@ -159,8 +114,6 @@ class Ventile(object):
                     print("in Ventil.task", self.v_state["V_Prop"])
                 except nidaqmx.DaqError as e:
                     print(e)
-
-
 
     def v_Prop_Stellgrad(self, Prozent):
 
@@ -289,7 +242,7 @@ class Ventile(object):
         # print(Ventil_name, ":\t", Ventilfunktion, "\tAdresse:\t", Adress)
         return (Adress)
 
-    def Ventile_schalten_ges(self,v_state_soll):
+    def Ventile_schalten_ges(self, v_state_soll):
         # todo: umruesten auf iteration von self.v_state
         # for blabla in v_state:
         #     print(blabla)
@@ -306,33 +259,5 @@ class Ventile(object):
         time.sleep(0.5)
         self._alle_aus()
 
-    def Ablauf_Test1(self):
-        print("\n\n\n Vierter Durchlauf")
-        self.Ventile_schalten_ges(self.v_state_soll_Volumen_evak_grob)
-        print("\n\n\n Vierter Durchlauf")
-        time.sleep(2)
-        self.Ventile_schalten_ges(self.v_soll_alle_zu)
-        print("\n\n\n Vierter Durchlauf")
-        time.sleep(2)
-        self.Ventile_schalten_ges(self.v_state_soll_Volumen_evak_grob)
-        time.sleep(2)
-        self.v_Prop_Stellgrad(Prozent=1)
-        time.sleep(2)
-        self.v_Prop_Stellgrad(Prozent=50)
-        time.sleep(2)
-        self.v_Prop_Stellgrad(Prozent=70)
-
-
-
-
-
-
 if __name__ == '__main__':
-
-    V = Ventile()
-    V.to_Messen()
-    print(V.state)
-    V.to_warten()
-    print(V.state)
-    V.run()
-    V.druck_halten(50, 30)
+    V = Messkarte()

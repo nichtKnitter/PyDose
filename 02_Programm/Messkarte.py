@@ -87,12 +87,13 @@ class Messkarte(object):
 
     def readSensors(self):
         self.druck = print("Sensoren lesen")
-        with nidaqmx.Task() as VentilTask:
-            VentilTask.ai_channels.add_ai_voltage_chan("Dev1/ai0",
-                                                       terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
-                                                       max_val=10,
-                                                       min_val=0, )  # terminal_config=VentilTask.TerminalConfiguration.NRSE
-            data = VentilTask.read()
+        with nidaqmx.Task() as LeseTask:
+            LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:1",
+                                                     terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
+                                                     max_val=10,
+                                                     min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
+            data = LeseTask.read()
+            # time.sleep(0.1)
             print(data)
 
     def vPropAnAus(self, Befehl_in="an"):

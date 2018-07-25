@@ -65,13 +65,13 @@ class robotStateMachine(object):
             source='segmentpruefung',
             dest='messen',
             trigger='tock',
-            after=['printTransition']
+            after=['printTransition', 'messen']
         )
         self.machine.add_transition(  # regel 3
             source='messen',
             dest='regelmoduspruefung',
             trigger='tock',
-            after=['printTransition', 'messen']
+            after=['printTransition']
             # ,            conditions=[self.testTimeisUp]
         )
         self.machine.add_transition(  # regel 3

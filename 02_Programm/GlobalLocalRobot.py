@@ -1,107 +1,118 @@
 import time
 
+from transitions import Machine
+
 
 class VDummyKlasse(object):
     def schalten1(self):
-        print("1")
+        print("Geschaltet 1")
 
     def schalten2(self):
-        print("2")
+        print("Geschaltet 2")
 
     def say_hello(self): print("hello, new state!")
 
     def say_goodbye(self): print("goodbye, old state!")
 
 
-from transitions import Machine
-
-#########################################
-####### Local Robot
-########################################
-class localRobot():
-    # class localRobot(Segmentart='halten', pSoll=0, TSoll=20, TimeMax=5):
-
+class robotStateMachine(object):
+    states = ['start', 'start_messung', 'segmentpruefung', 'messen', 'schalten', 'warten']
+    # segTime = 0
+    # tacktzeit = 0
     Messkarte = VDummyKlasse()
-    states = ['s1', 's2', 'gas', 'plasma']
-    transitions = [
-        {'trigger': 'schalten_hoch', 'source': 's1', 'dest': 's2'},
-        {'trigger': 'schalten_runter', 'source': 's2', 'dest': 's1'},
-        {'trigger': 'sublimate', 'source': 's1', 'dest': 's2'},
-        {'trigger': 'ionize', 'source': 's2', 'dest': 's1'}
-    ]
-    machine = Machine(model=Messkarte, states=states, transitions=transitions, initial='s1')
-    # machine.add_transition('schalten_hoch', 's1', 's2')
-    # machine.add_transition('schalten_runter', 's2', 's1')
-    # Lump now has state!
-    print('Messkarte.state:\t', Messkarte.state)
-    print('Messkarte.is_plasma()\t',
-          Messkarte.is_plasma())  ## Wichtig! So kann ich auf die Statemethoden zugreifen, wird nicht im autocomplete angezeigt!!!!
-    Messkarte.to_plasma()
-    Messkarte.say_goodbye()
 
-    def schalten_hoch(self):
+    def __init__(self, startparameter1):
+
+        self.name = startparameter1
+        self.kittens_rescued = 0
+
+        self.num = 0
+        self.segTime = time.time()
+        self.tacktzeit = time.time()
+
+        # Initialize the state machine
+        self.machine = Machine(model=self, states=robotStateMachine.states, initial='start')
+        # self.machine = Machine(
+        #     model=self.Messkarte,
+        #     states=self.states,
+        #     initial='start'
+        # )
+
+        self.machine.add_transition(  # regel 1
+            source='start',
+            dest='start_messung',
+            trigger='tock',
+            after=['printTransition', 'resetTacktTimer']
+        )
+        self.machine.add_transition(  # regel 2
+            source='start_messung',
+            dest='segmentpruefung',
+            trigger='tock',
+            after=['printTransition']
+            # ,            conditions=[self.testTimeisUp]
+        )
+        self.machine.add_transition(  # regel 3
+            source='segmentpruefung',
+            dest='messen',
+            trigger='tock',
+            after=['printTransition']
+        )
+        self.machine.add_transition(  # regel 3
+            source='messen',
+            dest='schalten',
+            trigger='tock',
+            after=['printTransition', 'VentileSchalten']
+            # ,            conditions=[self.testTimeisUp]
+        )
+        self.machine.add_transition(  # regel 3
+            source='schalten',
+            dest='warten',
+            trigger='tock',
+            after=['printTransition']
+            # ,            conditions=[self.testTimeisUp]
+        )
+        self.machine.add_transition(  # regel 3
+            source='warten',
+            dest='start',
+            trigger='tock',
+            after=['printTransition'],
+            conditions=[self.testTacktTimer]
+        )
+
+    def testTacktTimer(self):
+        self.num = self.num + 1
+        if self.num == 100:
+            print('.', end='', flush=True)
+            self.num = 0
+        # result = True if  else False
+        if (time.time() - self.tacktzeit > 5):
+            result = True
+            print()
+        else:
+            result = False
+
+        return result
+
+    def resetTacktTimer(self):
+        self.tacktzeit = time.time()
+        # print ('nextState')
+        # self.tock()
+
+    def printTransition(self):
+        print("state gewechselt zu:\t", self.state)
+
+    def VentileSchalten(self):
         self.Messkarte.schalten1()
-        self.Messkarte.state = 's2'
-        print('Messkarte1:\t', self.Messkarte.state)
-
-    def schalten_2(self):
-        self.Messkarte.schalten2()
-        self.Messkarte.state = 's1'
-        print('Messkarte2:\t', self.Messkarte.state)
-
-    def schalten_3(self):
-        self.Messkarte.schalten2()
-        print('is plasma: ', self.Messkarte.is_plasma())
 
 
+class globalRobot():
+    batman = robotStateMachine("Batman")  # achtung! hier wird batman gleich wieder zerstört
+
+    def run(self):
+        while True:
+            time.sleep(0.001)
+            self.batman.tock()
 
 
-#########################################
-####### Global Robot
-########################################
-
-class GlobalRobot():
-    states = ['THochIsobar', 'TRunterIsobar', 'pHochIsotherm', 'gemischt', 'pRunterIsotherm', 'Ausheizen','NA']
-    currentState = ['NA']
-    localRobotObj = localRobot()
-    timestart = time.time()
-    def los(self):
-        while time.time() - self.timestart < 5:
-            ### hier aussen die warteschleife implementieren?
-            # 0. Messen
-            # 1. segmentstate mit segmentsollstate abgleichen
-            # bei Änderung vsoll, timeSoll, wunschstate,
-            # 2. in jeweilige regelstrategie gehen
-            #       jeweilige stellparameter berechnen
-            #       schalten
-
-            # assert machine.get_state(hero.state).is_busy  # We are at home and busy
-            # assert hero.state == 'away'  # Impatient superhero already left the building
-            # assert machine.get_state(hero.state).is_home is False  # Yupp, not at home anymore
-            print('1 Robot.Messkarte.state\t', localRobot.Messkarte.state)
-            # Robot.Messkarte.schalten2()
-            # Robot.Messkarte.schalten1()
-            print('2 Robot.Messkarte.state\t', self.localRobotObj.Messkarte.state)
-            self.localRobotObj.Messkarte.schalten2()
-
-            #
-            # localRobotObj.schalten_hoch()
-            # localRobotObj.schalten_runter()
-
-            self.localRobotObj.Messkarte.to_plasma()
-            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-            self.localRobotObj.Messkarte.to_s2()
-            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-
-            self.localRobotObj.Messkarte.schalten2()
-            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-
-            self.localRobotObj.Messkarte.to_s1()
-            print(self.localRobotObj.Messkarte.state)  ### Achtung! Variable wird nicht in pycharm angezeigt.
-
-            time.sleep(1)
-
-
-
-Hauptrechner = GlobalRobot()
-Hauptrechner.los()
+blubb = globalRobot()
+blubb.run()

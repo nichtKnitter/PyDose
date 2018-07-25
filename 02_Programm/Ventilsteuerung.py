@@ -36,9 +36,7 @@ class Ventile(object):
 
 
     def __init__(self):
-        # self.v_state = \
-        self.__initVentilStates()
-        # self._vSstateInit()
+        self.debugOn = True
         self.Takt_s = 1
         self.solldruck = 5600
         self.druck = 56
@@ -47,12 +45,12 @@ class Ventile(object):
         self.Ventil_zu = [False, True]
         self.Ventil_aus = [True, True]
 
-        self.machine = Machine(model=self, states=Ventile.statesAblauf, initial='reset')
-
-        self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
-        self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
-        self.machine.add_transition("messen_start", source="warten", dest='messen')
-        self.machine.add_transition("messen_stop", source="messen", dest='warten')
+        # self.machine = Machine(model=self, states=Ventile.statesAblauf, initial='reset')
+        #
+        # self.machine.add_transition("Druck_Halten_start", source="warten", dest='druck_halten')
+        # self.machine.add_transition("druck_halten_ende", source="druck_halten", dest='warten')
+        # self.machine.add_transition("messen_start", source="warten", dest='messen')
+        # self.machine.add_transition("messen_stop", source="messen", dest='warten')
 
         # States:
         self.__initVentilStates()
@@ -142,6 +140,28 @@ class Ventile(object):
     def readSensors(self):
         self.druck = print("Sensoren lesen")
 
+    def vPropAnAus(self, Befehl_in="an"):
+        Ventil_an = [True]
+        Ventil_aus = [False]
+        Ventiladresse = self._Ventiladressen("V_PropOnOff")
+        if (Befehl_in == "an"):
+            Befehl = Ventil_an
+        if (Befehl_in == "aus"):
+            Befehl = Ventil_aus
+        if (self.v_state["V_Prop"][
+            "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+            with nidaqmx.Task() as VentilTask:
+                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
+                try:
+                    (VentilTask.write(Befehl))
+                    self.v_state["V_Prop"]["state"] = Befehl_in
+                    print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+                    print("in Ventil.task", self.v_state["V_Prop"])
+                except nidaqmx.DaqError as e:
+                    print(e)
+
+
+
     def v_Prop_Stellgrad(self, Prozent):
 
         umax = 5  # V
@@ -164,7 +184,6 @@ class Ventile(object):
                 print(e)
         return self.v_state
 
-    # Ab hier Statedefinitionen
 
     def _alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
@@ -175,27 +194,6 @@ class Ventile(object):
         self.Ventil_schalten_einzeln("V5", "aus", False)
         self.Ventil_schalten_einzeln("V6", "aus", False)
         self.Ventil_schalten_einzeln("V7", "aus", False)
-
-
-    def vPropAnAus(self, Befehl_in="an"):
-        Ventil_an = [True]
-        Ventil_aus = [False]
-        Ventiladresse = self._Ventiladressen("V_PropOnOff")
-        if (Befehl_in == "an"):
-            Befehl = Ventil_an
-        if (Befehl_in == "aus"):
-            Befehl = Ventil_aus
-        if (self.v_state["V_Prop"][
-            "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
-            with nidaqmx.Task() as VentilTask:
-                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
-                try:
-                    (VentilTask.write(Befehl))
-                    self.v_state["V_Prop"]["state"] = Befehl_in
-                    print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                    print("in Ventil.task", self.v_state["V_Prop"])
-                except nidaqmx.DaqError as e:
-                    print(e)
 
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
@@ -210,10 +208,11 @@ class Ventile(object):
             Befehl = self.Ventil_aus
 
         if (Befehl_in == "auf" or Befehl_in == "zu"):
-
-            print(Ventil_name)
-            print(Befehl_in)
-            print(self.v_state)
+            if (self.debugOn == True):
+                print("Ventil_schalten_einzeln")
+                print(Ventil_name)
+                print(Befehl_in)
+                print(self.v_state)
             if (self.v_state[Ventil_name]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke

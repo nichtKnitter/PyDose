@@ -109,9 +109,13 @@ class Messkarte(object):
         if len(self.p1array) > self.datenbufferlaenge:
             self.p1array.pop(0)
             self.p2array.pop(0)
+            self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
-        print(self.p1array)
-        print(self.p2array)
+        # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
+        stringp1 = ("aktueller p1 array:\t" + str(self.p1array))
+        self.Messkartenlogger.info(stringp1)
+        stringp2 = ("aktueller p2 array:\t" + str(self.p2array))
+        self.Messkartenlogger.info(stringp2)
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]

@@ -2,13 +2,19 @@
 import logging
 import time
 
-from Messkarte import Messkarte
+import Messkarte
 from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-logging.getLogger('transitions').setLevel(logging.INFO)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
 
+
+# # Create the Handler for logging data to a file
+# logger_handler = logging.FileHandler('python_logging.log')
+# logger_handler.setLevel(logging.INFO)
+# # Add the Handler to the Logger
+# self.Messkartenlogger.addHandler(logger_handler)
 
 class VDummyKlasse(object):
     def schalten1(self):
@@ -28,11 +34,13 @@ class robotStateMachine(object):
     # segTime = 0
     # tacktzeit = 0
     MesskarteOld = VDummyKlasse()
-    MesskarteObj = Messkarte()
+
+    MesskarteObj = Messkarte.Messkarte()
 
     def __init__(self, startparameter1):
 
         self.name = startparameter1
+
 
 
         self.num = 0
@@ -40,7 +48,7 @@ class robotStateMachine(object):
         self.tacktzeit = time.time()
 
         # Initialize the state machine
-        self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat')
+        self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
 
         self.machine.add_transition(  # regel 1
             source='start_gereat',
@@ -100,7 +108,7 @@ class robotStateMachine(object):
         # self.tock()
     def testTacktTimer(self):
         self.num = self.num + 1
-        if self.num == 100:
+        if self.num == 10:
             print('.', end='', flush=True)
             self.num = 0
         # result = True if  else False
@@ -122,21 +130,29 @@ class robotStateMachine(object):
 
     def messen(self):
         print('messen')
-        self.MesskarteObj.readSensors()
+        data = self.MesskarteObj.readSensors()
+        self.p1ProbeMbar = data[0]
+        self.p2ManifoldMbar = data[1]
+        bla1 = self.MesskarteObj.getP1ProbeMbar()
+        bla2 = self.MesskarteObj.getP2ManifoldMbar()
+        print(bla1, bla2)
 
     def regeln_langsam(self):
         pass
 
 
 
+
 class globalRobot():
-    batman = robotStateMachine("Batman")  # achtung! hier wird batman gleich wieder zerstört
+    # Initialisiert ein Statemachine Object von robotStateMachine,
+    # und sendet dann in hoher Geschwindigkeit dieses
+    localRobotStMachObj = robotStateMachine("Batman")  # achtung! hier wird batman gleich wieder zerstört
 
     def run(self):
         time_total = time.time()
         while True:
-            time.sleep(0.001)
-            self.batman.tock()
+            time.sleep(0.0001)
+            self.localRobotStMachObj.tock()
             if (time.time() - time_total > 15):
                 break
 

@@ -13,9 +13,9 @@ class Messkarte(object):
     # dict zum verfolgen der States der Ventile, damit die nur geschaltet werden wenn es nötig ist.
     v_state = {}
 
-    datenbufferlaenge = 3
-    p1array = []  # pProbeMbar
-    p2array = []  # pManifoldMbar
+    datenbufferlaenge = 10
+    p1ProbeArray = []  # pProbeMbar
+    p2ManifoldArray = []  # pManifoldMbar
 
     def __init__(self):
 
@@ -34,7 +34,7 @@ class Messkarte(object):
 
         ##############################################################################
         self.Takt_s = 1
-        self.solldruck = 5600
+        self.solldruck_mbar = 56
 
         # erstmaliges lesen der sensoren
         self.readSensors()
@@ -91,6 +91,18 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
 
+    def getP1ProbeMbar(self):
+        return self.p1ProbeMbar
+
+    def getP2ManifoldMbar(self):
+        return self.p2ManifoldMbar
+
+    def getSolldruck(self):
+        return self.solldruck_mbar
+
+    def setSolldruck(self, solldruck):
+        self.solldruck_mbar = solldruck
+
     def readSensors(self):
         # sensoren auslesen. bisher nur zwei stück
         with nidaqmx.Task() as LeseTask:
@@ -100,22 +112,32 @@ class Messkarte(object):
                                                      min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
             data = LeseTask.read()
 
+        # aktuelle Druckwerte als floats speichern
+        self.p1ProbeMbar = data[0]
+        self.p2ManifoldMbar = data[1]
+        # In logger anzeigen
+        stringp = ("p1ProbeMbar = " + str(self.p1ProbeMbar) + ";\tp2ManifoldMbar = " + str(self.p2ManifoldMbar))
+        self.Messkartenlogger.info(stringp)
+
         # daten in arrays abspeichern, mit fester Pufferlaenge
         # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
-        self.p1array.append(data[0])
-        self.p2array.append(data[1])
+        self.p1ProbeArray.append(data[0])
+        self.p2ManifoldArray.append(data[1])
 
         # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
-        if len(self.p1array) > self.datenbufferlaenge:
-            self.p1array.pop(0)
-            self.p2array.pop(0)
+        if len(self.p1ProbeArray) > self.datenbufferlaenge:
+            self.p1ProbeArray.pop(0)
+            self.p2ManifoldArray.pop(0)
             self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
         # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
-        stringp1 = ("aktueller p1 array:\t" + str(self.p1array))
+        stringp1 = ("aktueller p1 array:\t" + str(self.p1ProbeArray))
         self.Messkartenlogger.info(stringp1)
-        stringp2 = ("aktueller p2 array:\t" + str(self.p2array))
+        stringp2 = ("aktueller p2 array:\t" + str(self.p2ManifoldArray))
         self.Messkartenlogger.info(stringp2)
+        return data
+
+
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
@@ -168,7 +190,6 @@ class Messkarte(object):
         self.Ventil_schalten_einzeln("V5", "aus", False)
         self.Ventil_schalten_einzeln("V6", "aus", False)
         self.Ventil_schalten_einzeln("V7", "aus", False)
-
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
         # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?

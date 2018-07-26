@@ -91,6 +91,26 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
 
+        self.vStateSollEvakFine = {}
+        self.vStateSollEvakFine["V1"] = {"state": "auf"}
+        self.vStateSollEvakFine["V2"] = {"state": "zu"}
+        self.vStateSollEvakFine["V3"] = {"state": "zu"}
+        self.vStateSollEvakFine["V4"] = {"state": "auf"}
+        self.vStateSollEvakFine["V5"] = {"state": "zu"}
+        self.vStateSollEvakFine["V6"] = {"state": "auf"}
+        self.vStateSollEvakFine["V7"] = {"state": "zu"}
+        self.vStateSollEvakFine["V_Prop"] = {"state": "an"}
+
+        self.vStateSollDoseFine = {}
+        self.vStateSollDoseFine["V1"] = {"state": "auf"}
+        self.vStateSollDoseFine["V2"] = {"state": "zu"}
+        self.vStateSollDoseFine["V3"] = {"state": "zu"}
+        self.vStateSollDoseFine["V4"] = {"state": "auf"}
+        self.vStateSollDoseFine["V5"] = {"state": "zu"}
+        self.vStateSollDoseFine["V6"] = {"state": "auf"}
+        self.vStateSollDoseFine["V7"] = {"state": "zu"}
+        self.vStateSollDoseFine["V_Prop"] = {"state": "an"}
+
     def getP1ProbeMbar(self):
         return self.p1ProbeMbar
 
@@ -136,8 +156,6 @@ class Messkarte(object):
         stringp2 = ("aktueller p2 array:\t" + str(self.p2ManifoldArray))
         self.Messkartenlogger.info(stringp2)
         return data
-
-
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]

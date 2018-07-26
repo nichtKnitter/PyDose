@@ -7,8 +7,11 @@ from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.CRITICAL)
 
+
+### Loggin in Console Stoppen
+# Statemachinelogger.disabled =True
 
 # # Create the Handler for logging data to a file
 # logger_handler = logging.FileHandler('python_logging.log')
@@ -37,15 +40,40 @@ class robotStateMachine(object):
 
     MesskarteObj = Messkarte.Messkarte()
 
+    # test ob karte funktioniert
+    # MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollDoseFine)
+    # time.sleep(1)
+    # print("warten")
+    # MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollEvakFine)
+    # time.sleep(5)
+    # print("warten")
+    # MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollAlleZu)
+    MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollDegassEvaporator)
+    aktuellerModus = "vStateSollDegassEvaporator"
+    time.sleep(5)
+    MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollAlleZu)
+    aktuellerModus = "vStateSollAlleZu"
+
     def __init__(self, startparameter1):
 
         self.name = startparameter1
 
+        # aktueller Solldruck
+        self.pSollMbar = 30
 
-
+        # couter für die punkte die beim warten geprintet werden
         self.num = 0
+
+        # startzeit des aktuellen Segmentes
         self.segTime = time.time()
-        self.tacktzeit = time.time()
+
+        # Taktzeit
+        self.gereateTackt = 0.1
+        self.startAktTackt = time.time()
+
+        # Alle Ventile beim Starten zu:
+        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu)
+        self.aktuellerModus = "vStateSollAlleZu"
 
         # Initialize the state machine
         self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
@@ -103,7 +131,7 @@ class robotStateMachine(object):
         )
 
     def resetTacktTimer(self):
-        self.tacktzeit = time.time()
+        self.startAktTackt = time.time()
         # print ('nextState')
         # self.tock()
     def testTacktTimer(self):
@@ -112,7 +140,7 @@ class robotStateMachine(object):
             print('.', end='', flush=True)
             self.num = 0
         # result = True if  else False
-        if (time.time() - self.tacktzeit > 1):
+        if (time.time() - self.startAktTackt >= self.gereateTackt):
             result = True
             print()
         else:
@@ -123,7 +151,8 @@ class robotStateMachine(object):
 
 
     def printTransition(self):
-        print("state gewechselt zu:\t", self.state)
+        # print("state gewechselt zu:\t", self.state)
+        pass
 
     def VentileSchalten(self):
         self.MesskarteOld.schalten1()
@@ -131,14 +160,39 @@ class robotStateMachine(object):
     def messen(self):
         print('messen')
         data = self.MesskarteObj.readSensors()
-        self.p1ProbeMbar = data[0]
-        self.p2ManifoldMbar = data[1]
-        bla1 = self.MesskarteObj.getP1ProbeMbar()
-        bla2 = self.MesskarteObj.getP2ManifoldMbar()
-        print(bla1, bla2)
+        # self.p1ProbeMbar = data[0]
+        # self.p2ManifoldMbar = data[1]
+        self.p1ProbeMbar = self.MesskarteObj.getP1ProbeMbar()
+        self.p2ManifoldMbar = self.MesskarteObj.getP2ManifoldMbar()
+
 
     def regeln_langsam(self):
-        pass
+        print("Regeln langsam:\tp1=", self.p1ProbeMbar, "\tpsoll=", self.pSollMbar)
+
+        if self.p1ProbeMbar < self.pSollMbar:
+            if self.aktuellerModus != "vStateSollDoseFine":
+                self.MesskarteObj.v_Prop_Stellgrad(1)
+                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine)
+                print("V_Dose_Fine")
+                self.aktuellerModus = "vStateSollDoseFine"
+        elif self.p1ProbeMbar > self.pSollMbar:
+            # if self.aktuellerModus != "vStateSollEvakFine":
+            #     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine)
+            #     print("V evac Fine")
+            #     self.aktuellerModus = "vStateSollEvakFine"
+
+            if self.aktuellerModus != "vStateSollProbeEvakGrob":
+                self.MesskarteObj.v_Prop_Stellgrad(1)
+                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollProbeEvakGrob)
+                print("V evac Fine")
+                self.aktuellerModus = "vStateSollProbeEvakGrob"
+        else:
+            if self.aktuellerModus != "vStateSollAlleZu":
+                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu)
+                print("Hold")
+                self.aktuellerModus = "vStateSollAlleZu"
+
+
 
 
 
@@ -151,10 +205,10 @@ class globalRobot():
     def run(self):
         time_total = time.time()
         while True:
-            time.sleep(0.0001)
+            time.sleep(0.00001)
             self.localRobotStMachObj.tock()
-            if (time.time() - time_total > 15):
-                break
+            # if (time.time() - time_total > 150):
+            #     break
 
 
 blubb = globalRobot()

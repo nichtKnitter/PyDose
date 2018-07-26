@@ -31,9 +31,10 @@ class Messkarte(object):
         # Add the Handler to the Logger
         self.Messkartenlogger.addHandler(logger_handler)
         self.Messkartenlogger.info('Completed configuring logger()!')
+        self.Messkartenlogger.disabled = True
 
         ##############################################################################
-        self.Takt_s = 1
+        self.Takt_s = 0.01
         self.solldruck_mbar = 56
 
         # erstmaliges lesen der sensoren
@@ -111,6 +112,26 @@ class Messkarte(object):
         self.vStateSollDoseFine["V7"] = {"state": "zu"}
         self.vStateSollDoseFine["V_Prop"] = {"state": "an"}
 
+        self.vStateSollProbeEvakGrob = {}
+        self.vStateSollProbeEvakGrob["V1"] = {"state": "auf"}
+        self.vStateSollProbeEvakGrob["V2"] = {"state": "zu"}
+        self.vStateSollProbeEvakGrob["V3"] = {"state": "zu"}
+        self.vStateSollProbeEvakGrob["V4"] = {"state": "auf"}
+        self.vStateSollProbeEvakGrob["V5"] = {"state": "auf"}
+        self.vStateSollProbeEvakGrob["V6"] = {"state": "auf"}
+        self.vStateSollProbeEvakGrob["V7"] = {"state": "zu"}
+        self.vStateSollProbeEvakGrob["V_Prop"] = {"state": "an"}
+
+        self.vStateSollDegassEvaporator = {}
+        self.vStateSollDegassEvaporator["V1"] = {"state": "auf"}
+        self.vStateSollDegassEvaporator["V2"] = {"state": "zu"}
+        self.vStateSollDegassEvaporator["V3"] = {"state": "auf"}
+        self.vStateSollDegassEvaporator["V4"] = {"state": "auf"}
+        self.vStateSollDegassEvaporator["V5"] = {"state": "auf"}
+        self.vStateSollDegassEvaporator["V6"] = {"state": "zu"}
+        self.vStateSollDegassEvaporator["V7"] = {"state": "zu"}
+        self.vStateSollDegassEvaporator["V_Prop"] = {"state": "aus"}
+
     def getP1ProbeMbar(self):
         return self.p1ProbeMbar
 
@@ -125,37 +146,42 @@ class Messkarte(object):
 
     def readSensors(self):
         # sensoren auslesen. bisher nur zwei stück
-        with nidaqmx.Task() as LeseTask:
-            LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:4",
-                                                     terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
-                                                     max_val=10,
-                                                     min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
-            data = LeseTask.read()
+        try:
+            with nidaqmx.Task() as LeseTask:
+                LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:4",
+                                                         terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
+                                                         max_val=10,
+                                                         min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
 
-        # aktuelle Druckwerte als floats speichern
-        self.p1ProbeMbar = data[0]
-        self.p2ManifoldMbar = data[1]
-        # In logger anzeigen
-        stringp = ("p1ProbeMbar = " + str(self.p1ProbeMbar) + ";\tp2ManifoldMbar = " + str(self.p2ManifoldMbar))
-        self.Messkartenlogger.info(stringp)
+                data = LeseTask.read()
+                # aktuelle Druckwerte als floats speichern
+                self.p1ProbeMbar = data[0] * 10
+                self.p2ManifoldMbar = data[1] * 10
+                # In logger anzeigen
+                stringp = ("p1ProbeMbar = " + str(self.p1ProbeMbar) + ";\tp2ManifoldMbar = " + str(self.p2ManifoldMbar))
+                self.Messkartenlogger.info(stringp)
 
-        # daten in arrays abspeichern, mit fester Pufferlaenge
-        # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
-        self.p1ProbeArray.append(data[0])
-        self.p2ManifoldArray.append(data[1])
+                # daten in arrays abspeichern, mit fester Pufferlaenge
+                # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
+                self.p1ProbeArray.append(self.p1ProbeMbar)
+                self.p2ManifoldArray.append(self.p2ManifoldMbar)
 
-        # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
-        if len(self.p1ProbeArray) > self.datenbufferlaenge:
-            self.p1ProbeArray.pop(0)
-            self.p2ManifoldArray.pop(0)
-            self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
+                # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
+                if len(self.p1ProbeArray) > self.datenbufferlaenge:
+                    self.p1ProbeArray.pop(0)
+                    self.p2ManifoldArray.pop(0)
+                    self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
-        # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
-        stringp1 = ("aktueller p1 array:\t" + str(self.p1ProbeArray))
-        self.Messkartenlogger.info(stringp1)
-        stringp2 = ("aktueller p2 array:\t" + str(self.p2ManifoldArray))
-        self.Messkartenlogger.info(stringp2)
-        return data
+                # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
+                stringp1 = ("aktueller p1 array:\t" + str(self.p1ProbeArray))
+                self.Messkartenlogger.info(stringp1)
+                stringp2 = ("aktueller p2 array:\t" + str(self.p2ManifoldArray))
+                self.Messkartenlogger.info(stringp2)
+                return data
+        except nidaqmx.DaqError as e:
+            print(e)
+
+
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
@@ -183,7 +209,7 @@ class Messkarte(object):
         umin = 0  # V
         usoll = ((umax - umin) / 100) * Prozent
         Ventiladresse = self._Ventiladressen("V_PropStellgrad")
-        print('test4\t',Ventiladresse)
+        # print('test4\t',Ventiladresse)
 
         with nidaqmx.Task() as VentilTask:
             # VentilTask = nidaqmx.Task() #nur für debugzwecke
@@ -210,8 +236,6 @@ class Messkarte(object):
         self.Ventil_schalten_einzeln("V7", "aus", False)
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
-        # time.sleep(0.005)    #minimale Sicherheitspause, hilft vielleicht gegen Kommunikationsprobleme?
-
         Ventiladresse = self._Ventiladressen(Ventil_name)
         if (Befehl_in == "auf"):
             Befehl = self.ventil_auf
@@ -221,12 +245,11 @@ class Messkarte(object):
             Befehl = self.Ventil_aus
 
         if (Befehl_in == "auf" or Befehl_in == "zu"):
-            if (self.debugOn == True):
-                print("Ventil_schalten_einzeln")
-                print(Ventil_name)
-                print(Befehl_in)
-                print(self.v_state)
-            if (self.v_state[Ventil_name]["state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+            # Debug und Infoausgaben
+            self.Messkartenlogger.debug("Ventil_schalten_einzeln:\t" + Ventil_name + Befehl_in)
+            self.Messkartenlogger.debug(self.v_state)
+            # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+            if (self.v_state[Ventil_name]["state"] != Befehl_in):
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
                     # print(Ventil_id, Befehl)
@@ -235,16 +258,18 @@ class Messkarte(object):
                         (VentilTask.write(Befehl))
                         self.v_state[Ventil_name]["active"] = True
                         self.v_state[Ventil_name]["state"] = Befehl_in
-                        print("Ventil:\t", Ventil_name, "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                        print("in Ventil.task", self.v_state[Ventil_name])
+                        self.Messkartenlogger.info(
+                            "Ventil:\t" + str(Ventil_name) + "\tBefehl_in:\t" + str(Befehl_in) + "\tBefehl:\t" + str(
+                                Befehl))
+                        self.Messkartenlogger.info("in Ventil.task" + str(self.v_state[Ventil_name]))
                     except nidaqmx.DaqError as e:
                         print(e)
         if (Befehl_in == "aus"):
-            print(self.v_state)
-            print(Ventil_name)
-            print(self.v_state[Ventil_name])
-            print("test ,", self.v_state[Ventil_name]["active"])
-            print("test2\t", self.v_state[Ventil_name]["active"] != False)  # ist True
+            self.Messkartenlogger.info(self.v_state)
+            self.Messkartenlogger.info(Ventil_name)
+            self.Messkartenlogger.info(self.v_state[Ventil_name])
+            # self.Messkartenlogger.info("test ,", self.v_state[Ventil_name]["active"])
+            # self.Messkartenlogger.info("test2\t", self.v_state[Ventil_name]["active"] != False)  # ist True
             if (self.v_state[Ventil_name]["active"] != False):
                 with nidaqmx.Task() as VentilTask:
                     # VentilTask = nidaqmx.Task() #nur für debugzwecke
@@ -314,10 +339,12 @@ class Messkarte(object):
         self.Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], False)
         self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
         self.Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
-        print('test3/t', v_state_soll["V_Prop"]["state"])
         self.vPropAnAus( v_state_soll["V_Prop"]["state"])
+        ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
         time.sleep(0.5)
         self._alle_aus()
 
 if __name__ == '__main__':
     V = Messkarte()
+    # V.Ventile_schalten_ges(V.vStateSollVolumenEvakGrob)
+    V.Ventile_schalten_ges(V.vStateSollProbeEvakGrob)

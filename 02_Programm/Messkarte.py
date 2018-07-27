@@ -47,12 +47,16 @@ class Messkarte(object):
 
         # States initialisiern:
         self.__initVentilStates()  # sollstates initialisieren
-        self.v_state = self.vSstateInit  # unbekannter ausgangszustand
+        self.v_state = self.vStateInit  # unbekannter ausgangszustand
+
+        # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
+        self.lastValveActivation = time.time()
 
     def __initVentilStates(self):
         # sollstates initialisieren
 
         self.vStateSollAlleZu = {}
+        self.vStateSollAlleZu["State"] = {"Name": "vStateSollAlleZu"}
         self.vStateSollAlleZu["V1"] = {"state": "zu"}
         self.vStateSollAlleZu["V2"] = {"state": "zu"}
         self.vStateSollAlleZu["V3"] = {"state": "zu"}
@@ -62,17 +66,19 @@ class Messkarte(object):
         self.vStateSollAlleZu["V7"] = {"state": "zu"}
         self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
 
-        self.vSstateInit = {}
-        self.vSstateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
-        self.vSstateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
-        self.vSstateInit["V3"] = {"id": 3, "state": "NA", "active": "NA"}
-        self.vSstateInit["V4"] = {"id": 4, "state": "NA", "active": "NA"}
-        self.vSstateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
-        self.vSstateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
-        self.vSstateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-        self.vSstateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
+        self.vStateInit = {}
+        self.vStateInit["State"] = {"Name": "vStateInit"}
+        self.vStateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
+        self.vStateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
+        self.vStateInit["V3"] = {"id": 3, "state": "NA", "active": "NA"}
+        self.vStateInit["V4"] = {"id": 4, "state": "NA", "active": "NA"}
+        self.vStateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
+        self.vStateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
+        self.vStateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
+        self.vStateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
 
         self.vStateSollAlleAuf = {}
+        self.vStateSollAlleAuf["State"] = {"Name": "vStateSollAlleAuf"}
         self.vStateSollAlleAuf["V1"] = {"state": "auf"}
         self.vStateSollAlleAuf["V2"] = {"state": "auf"}
         self.vStateSollAlleAuf["V3"] = {"state": "auf"}
@@ -83,6 +89,7 @@ class Messkarte(object):
         self.vStateSollAlleAuf["V_Prop"] = {"state": "an"}
 
         self.vStateSollVolumenEvakGrob = {}
+        self.vStateSollVolumenEvakGrob["State"] = {"Name": "vStateSollVolumenEvakGrob"}
         self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
         self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V3"] = {"state": "zu"}
@@ -93,6 +100,7 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
 
         self.vStateSollEvakFine = {}
+        self.vStateSollEvakFine["State"] = {"Name": "vStateSollEvakFine"}
         self.vStateSollEvakFine["V1"] = {"state": "auf"}
         self.vStateSollEvakFine["V2"] = {"state": "zu"}
         self.vStateSollEvakFine["V3"] = {"state": "zu"}
@@ -103,6 +111,7 @@ class Messkarte(object):
         self.vStateSollEvakFine["V_Prop"] = {"state": "an"}
 
         self.vStateSollDoseFine = {}
+        self.vStateInit["State"] = {"Name": "vStateSollDoseFine"}
         self.vStateSollDoseFine["V1"] = {"state": "auf"}
         self.vStateSollDoseFine["V2"] = {"state": "zu"}
         self.vStateSollDoseFine["V3"] = {"state": "zu"}
@@ -113,6 +122,7 @@ class Messkarte(object):
         self.vStateSollDoseFine["V_Prop"] = {"state": "an"}
 
         self.vStateSollProbeEvakGrob = {}
+        self.vStateSollProbeEvakGrob["State"] = {"Name": "vStateSollProbeEvakGrob"}
         self.vStateSollProbeEvakGrob["V1"] = {"state": "auf"}
         self.vStateSollProbeEvakGrob["V2"] = {"state": "zu"}
         self.vStateSollProbeEvakGrob["V3"] = {"state": "zu"}
@@ -123,6 +133,7 @@ class Messkarte(object):
         self.vStateSollProbeEvakGrob["V_Prop"] = {"state": "an"}
 
         self.vStateSollDegassEvaporator = {}
+        self.vStateSollDegassEvaporator["State"] = {"Name": "vStateSollDegassEvaporator"}
         self.vStateSollDegassEvaporator["V1"] = {"state": "auf"}
         self.vStateSollDegassEvaporator["V2"] = {"state": "zu"}
         self.vStateSollDegassEvaporator["V3"] = {"state": "auf"}
@@ -194,8 +205,8 @@ class Messkarte(object):
         if (self.v_state["V_Prop"][
             "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
             with nidaqmx.Task() as VentilTask:
-                VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
                 try:
+                    VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
                     (VentilTask.write(Befehl))
                     self.v_state["V_Prop"]["state"] = Befehl_in
                     print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
@@ -209,18 +220,16 @@ class Messkarte(object):
         umin = 0  # V
         usoll = ((umax - umin) / 100) * Prozent
         Ventiladresse = self._Ventiladressen("V_PropStellgrad")
-        # print('test4\t',Ventiladresse)
 
         with nidaqmx.Task() as VentilTask:
             # VentilTask = nidaqmx.Task() #nur für debugzwecke
             # print(Ventil_id, Befehl)
-            VentilTask.ao_channels.add_ao_voltage_chan(Ventiladresse, min_val=0,
-                                                       max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
-
             try:
+                VentilTask.ao_channels.add_ao_voltage_chan(Ventiladresse, min_val=0,
+                                                       max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
                 VentilTask.write(usoll)
                 self.v_state["V_Prop"]["stellgrad"] = Prozent
-                print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent")
+                print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t', usoll)
             except nidaqmx.DaqError as e:
                 print(e)
         return self.v_state
@@ -262,6 +271,9 @@ class Messkarte(object):
                             "Ventil:\t" + str(Ventil_name) + "\tBefehl_in:\t" + str(Befehl_in) + "\tBefehl:\t" + str(
                                 Befehl))
                         self.Messkartenlogger.info("in Ventil.task" + str(self.v_state[Ventil_name]))
+                        # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
+                        self.lastValveActivation = time.time()
+
                     except nidaqmx.DaqError as e:
                         print(e)
         if (Befehl_in == "aus"):
@@ -327,7 +339,7 @@ class Messkarte(object):
         # print(Ventil_name, ":\t", Ventilfunktion, "\tAdresse:\t", Adress)
         return (Adress)
 
-    def Ventile_schalten_ges(self, v_state_soll):
+    def Ventile_schalten_ges(self, v_state_soll, shutOffAuto=True):
         # todo: umruesten auf iteration von self.v_state
         # for blabla in v_state:
         #     print(blabla)
@@ -340,9 +352,10 @@ class Messkarte(object):
         self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
         self.Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
         self.vPropAnAus( v_state_soll["V_Prop"]["state"])
-        ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
-        time.sleep(0.5)
-        self._alle_aus()
+        if shutOffAuto == True:
+            ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
+            time.sleep(0.5)
+            self._alle_aus()
 
 if __name__ == '__main__':
     V = Messkarte()

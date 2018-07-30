@@ -57,6 +57,8 @@ class robotStateMachine(object):
 
         # aktueller Solldruck
         self.pSollMbar = 20
+        # erlaubte regelabweichung
+        self.maxDeltaPAllowedMbar = 0.1
 
         # couter für die punkte die beim warten geprintet werden
         self.num = 0
@@ -196,8 +198,6 @@ class robotStateMachine(object):
         # print("state gewechselt zu:\t", self.state)
         pass
 
-    def VentileSchalten(self):
-        self.MesskarteOld.schalten1()
 
     def messen(self):
         self.MesskarteObj.readSensors()
@@ -209,7 +209,7 @@ class robotStateMachine(object):
     def regeln_langsam(self):
         print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p1ProbeMbar), "\tpsoll=", self.pSollMbar)
         if self.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
-            if self.p1ProbeMbar < self.pSollMbar:
+            if self.p1ProbeMbar < (self.pSollMbar - self.maxDeltaPAllowedMbar):
                 print("V_Dose_Fine: nach oben")
                 if self.aktuellerModus != "vStateSollDoseFine":  # nur wenn er es nicht eh schon macht
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
@@ -219,7 +219,7 @@ class robotStateMachine(object):
                     self.lastValveActivation = time.time()
                     self.anyValveOn = True
 
-            elif self.p1ProbeMbar > self.pSollMbar:
+            elif self.p1ProbeMbar > (self.pSollMbar + self.maxDeltaPAllowedMbar):
                 print("V evac Fine: nach unten")
                 if self.aktuellerModus != "vStateSollProbeEvakGrob":  # nur wenn er es nicht eh schon macht
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollProbeEvakGrob, False)

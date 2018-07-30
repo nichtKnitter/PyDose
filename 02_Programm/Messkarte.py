@@ -54,6 +54,16 @@ class Messkarte(object):
 
     def __initVentilStates(self):
         # sollstates initialisieren
+        self.vStateInit = {}
+        self.vStateInit["State"] = {"Name": "vStateInit"}
+        self.vStateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
+        self.vStateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
+        self.vStateInit["V3"] = {"id": 3, "state": "NA", "active": "NA"}
+        self.vStateInit["V4"] = {"id": 4, "state": "NA", "active": "NA"}
+        self.vStateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
+        self.vStateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
+        self.vStateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
+        self.vStateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
 
         self.vStateSollAlleZu = {}
         self.vStateSollAlleZu["State"] = {"Name": "vStateSollAlleZu"}
@@ -65,17 +75,6 @@ class Messkarte(object):
         self.vStateSollAlleZu["V6"] = {"state": "zu"}
         self.vStateSollAlleZu["V7"] = {"state": "zu"}
         self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
-
-        self.vStateInit = {}
-        self.vStateInit["State"] = {"Name": "vStateInit"}
-        self.vStateInit["V1"] = {"id": 1, "state": "NA", "active": "NA"}
-        self.vStateInit["V2"] = {"id": 2, "state": "NA", "active": "NA"}
-        self.vStateInit["V3"] = {"id": 3, "state": "NA", "active": "NA"}
-        self.vStateInit["V4"] = {"id": 4, "state": "NA", "active": "NA"}
-        self.vStateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
-        self.vStateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
-        self.vStateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-        self.vStateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
 
         self.vStateSollAlleAuf = {}
         self.vStateSollAlleAuf["State"] = {"Name": "vStateSollAlleAuf"}
@@ -93,10 +92,10 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V1"] = {"state": "auf"}
         self.vStateSollVolumenEvakGrob["V2"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V3"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V4"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V5"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V4"] = {"state": "auf"}
+        self.vStateSollVolumenEvakGrob["V5"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
-        self.vStateSollVolumenEvakGrob["V7"] = {"state": "zu"}
+        self.vStateSollVolumenEvakGrob["V7"] = {"state": "auf"}
         self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
 
         self.vStateSollEvakFine = {}
@@ -111,7 +110,7 @@ class Messkarte(object):
         self.vStateSollEvakFine["V_Prop"] = {"state": "an"}
 
         self.vStateSollDoseFine = {}
-        self.vStateInit["State"] = {"Name": "vStateSollDoseFine"}
+        self.vStateSollDoseFine["State"] = {"Name": "vStateSollDoseFine"}
         self.vStateSollDoseFine["V1"] = {"state": "auf"}
         self.vStateSollDoseFine["V2"] = {"state": "zu"}
         self.vStateSollDoseFine["V3"] = {"state": "zu"}
@@ -142,6 +141,39 @@ class Messkarte(object):
         self.vStateSollDegassEvaporator["V6"] = {"state": "zu"}
         self.vStateSollDegassEvaporator["V7"] = {"state": "zu"}
         self.vStateSollDegassEvaporator["V_Prop"] = {"state": "aus"}
+
+        self.vStateSollEvacFineVol1 = {}
+        self.vStateSollEvacFineVol1["State"] = {"Name": "vStateSollEvacFineVol1"}
+        self.vStateSollEvacFineVol1["V1"] = {"state": "auf"}
+        self.vStateSollEvacFineVol1["V2"] = {"state": "zu"}
+        self.vStateSollEvacFineVol1["V3"] = {"state": "zu"}
+        self.vStateSollEvacFineVol1["V4"] = {"state": "auf"}
+        self.vStateSollEvacFineVol1["V5"] = {"state": "auf"}
+        self.vStateSollEvacFineVol1["V6"] = {"state": "zu"}
+        self.vStateSollEvacFineVol1["V7"] = {"state": "zu"}
+        self.vStateSollEvacFineVol1["V_Prop"] = {"state": "aus"}
+
+        self.vStateSollVolSample = {}
+        self.vStateSollVolSample["State"] = {"Name": "vStateSollEvacFineVol1"}
+        self.vStateSollVolSample["V1"] = {"state": "zu"}
+        self.vStateSollVolSample["V2"] = {"state": "zu"}
+        self.vStateSollVolSample["V3"] = {"state": "zu"}
+        self.vStateSollVolSample["V4"] = {"state": "auf"}
+        self.vStateSollVolSample["V5"] = {"state": "auf"}
+        self.vStateSollVolSample["V6"] = {"state": "auf"}
+        self.vStateSollVolSample["V7"] = {"state": "zu"}
+        self.vStateSollVolSample["V_Prop"] = {"state": "aus"}
+
+        self.vStateSollDoseFineVol1 = {}
+        self.vStateSollDoseFineVol1["State"] = {"Name": "vStateSollEvacFineVol1"}
+        self.vStateSollDoseFineVol1["V1"] = {"state": "zu"}
+        self.vStateSollDoseFineVol1["V2"] = {"state": "zu"}
+        self.vStateSollDoseFineVol1["V3"] = {"state": "auf"}
+        self.vStateSollDoseFineVol1["V4"] = {"state": "auf"}
+        self.vStateSollDoseFineVol1["V5"] = {"state": "auf"}
+        self.vStateSollDoseFineVol1["V6"] = {"state": "zu"}
+        self.vStateSollDoseFineVol1["V7"] = {"state": "zu"}
+        self.vStateSollDoseFineVol1["V_Prop"] = {"state": "aus"}
 
     def getP1ProbeMbar(self):
         return self.p1ProbeMbar
@@ -273,6 +305,7 @@ class Messkarte(object):
                         self.Messkartenlogger.info("in Ventil.task" + str(self.v_state[Ventil_name]))
                         # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
                         self.lastValveActivation = time.time()
+                        time.sleep(0.01)
 
                     except nidaqmx.DaqError as e:
                         print(e)

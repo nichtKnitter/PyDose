@@ -55,8 +55,10 @@ class robotStateMachine(object):
 
         self.name = startparameter1
 
+        self.isRunning = False
+
         # aktueller Solldruck
-        self.pSollMbar = 20
+        self.pSollMbar = 17
         # erlaubte regelabweichung
         self.maxDeltaPAllowedMbar = 0.1
 
@@ -75,7 +77,7 @@ class robotStateMachine(object):
         self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
         ## minimum Aktivzeit für Ventile ~ 0.35 s
-        self.minimumValveOnTime = 0.35
+        self.minimumValveOnTime = 0.5
 
         # Alle Kanaele auschalten
         self.MesskarteObj._alle_aus()
@@ -153,7 +155,7 @@ class robotStateMachine(object):
             dest='start_cycle',
             trigger='tock',
             after=['printTransition'],
-            conditions=['testTacktTimer']
+            conditions=['testTacktTimer', 'checkIfMachineIsRunning']
         )
         self.machine.add_transition(  # regel 3
             source='warten',
@@ -193,6 +195,9 @@ class robotStateMachine(object):
         else:
             result = False
         return result
+
+    def checkIfMachineIsRunning(self):
+        return self.isRunning
 
     def printTransition(self):
         # print("state gewechselt zu:\t", self.state)
@@ -272,5 +277,6 @@ class globalRobot():
             #     break
 
 
-blubb = globalRobot()
-blubb.run()
+if __name__ == '__main__':
+    blubb = globalRobot()
+    blubb.run()

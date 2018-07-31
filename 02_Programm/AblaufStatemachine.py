@@ -14,24 +14,13 @@ Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
 # Statemachinelogger.disabled =True
 
 
-class VDummyKlasse(object):
-    def schalten1(self):
-        print("Geschaltet 1")
-
-    def schalten2(self):
-        print("Geschaltet 2")
-
-    def say_hello(self): print("hello, new state!")
-
-    def say_goodbye(self): print("goodbye, old state!")
 
 
 class robotStateMachine(object):
     states = ['start_gereat', 'start_messung', 'start_cycle', 'segmentpruefung', 'messen', 'regelmoduspruefung',
-              'regeln_langsam', 'regelnLangsamPropventil', 'warten', 'VentileAusschalten']
+              'regeln_langsam', 'regelnLangsamPropventil', 'warten', 'VentileAusschalten', 'messenCont']
     # segTime = 0
     # tacktzeit = 0
-    MesskarteOld = VDummyKlasse()
 
     MesskarteObj = Messkarte.Messkarte()
 
@@ -70,10 +59,11 @@ class robotStateMachine(object):
 
         # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
         self.startAktTackt = time.time()
-        self.gereateTackt = 0.1
+        self.gereateTackt = 0.5
+        self.messtaktCont = 0.1
 
         # Schnellmoegliche DAQ Befehl Sequenzen
-        self.DAQminimumTakt = 0.02
+        self.DAQminimumTakt = 0.01
         self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
         ## minimum Aktivzeit für Ventile ~ 0.35 s
@@ -150,14 +140,8 @@ class robotStateMachine(object):
             trigger='tock',
             after=['printTransition']
         )
-        self.machine.add_transition(  # regel 3
-            source='warten',
-            dest='start_cycle',
-            trigger='tock',
-            after=['printTransition'],
-            conditions=['testTacktTimer', 'checkIfMachineIsRunning']
-        )
-        self.machine.add_transition(  # regel 3
+        ### aus Warten in Ventile Ausschalten und zurück
+        self.machine.add_transition(  # muss vor transition zu start cycle gemacht werden, damit das höhere Pr
             source='warten',
             dest='VentileAusschalten',
             trigger='tock',
@@ -170,6 +154,31 @@ class robotStateMachine(object):
             trigger='tock',
             after=['printTransition']
         )
+
+        self.machine.add_transition(  # hat hoehere Prio als messen?
+            source='warten',
+            dest='start_cycle',
+            trigger='tock',
+            # after=['printTransition'],
+            conditions=['testTacktTimer', 'checkIfMachineIsRunning']
+        )
+        self.machine.add_transition(
+            trigger='tock',
+            source='warten',
+            dest='messenCont',
+            conditions=['TestMesstaktOver'],
+            after='messen'
+        )
+        self.machine.add_transition(
+            trigger='tock',
+            source='messenCont',
+            dest='warten',
+            conditions=['TestMesstaktOver'],
+            after='messen'
+        )
+
+    def setSolldruck(self, solldruck):
+        self.pSollMbar = solldruck
 
     def resetTacktTimer(self):
         self.startAktTackt = time.time()
@@ -196,6 +205,13 @@ class robotStateMachine(object):
             result = False
         return result
 
+    def TestMesstaktOver(self):
+        if time.time() - self.lastMeasurement > self.messtaktCont:
+            ergebnis = True
+        else:
+            ergebnis = False
+        return (ergebnis)
+
     def checkIfMachineIsRunning(self):
         return self.isRunning
 
@@ -209,6 +225,8 @@ class robotStateMachine(object):
         self.lastDAQAction = time.time()
         self.p1ProbeMbar = self.MesskarteObj.getP1ProbeMbar()
         self.p2ManifoldMbar = self.MesskarteObj.getP2ManifoldMbar()
+        self.lastMeasurement = time.time()
+
 
 
     def regeln_langsam(self):
@@ -250,7 +268,10 @@ class robotStateMachine(object):
         # print(self.anyValveOn)
         # print(time.time()-self.lastDAQAction, self.DAQminimumTakt)
         # print (time.time()-self.lastValveActivation)
-        if self.anyValveOn is True and time.time() - self.lastValveActivation > self.minimumValveOnTime:
+        # print(self.lastValveActivation)
+        # print(time.time() - self.lastValveActivation)
+        # print(self.minimumValveOnTime)
+        if self.anyValveOn is True and (time.time() - self.lastValveActivation) > self.minimumValveOnTime:
             # time.time()-self.lastDAQAction > self.DAQminimumTakt and \
             result = True
         else:

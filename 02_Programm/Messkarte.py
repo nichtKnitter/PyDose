@@ -13,7 +13,9 @@ class Messkarte(object):
     # dict zum verfolgen der States der Ventile, damit die nur geschaltet werden wenn es nötig ist.
     v_state = {}
 
-    datenbufferlaenge = 10
+    datenbufferlaenge = 100
+    timeStartMessung = time.time()
+    timearray = []
     p1ProbeArray = []  # pProbeMbar
     p2ManifoldArray = []  # pManifoldMbar
 
@@ -34,8 +36,6 @@ class Messkarte(object):
         self.Messkartenlogger.disabled = True
 
         ##############################################################################
-        self.Takt_s = 0.01
-        self.solldruck_mbar = 56
 
         # erstmaliges lesen der sensoren
         self.readSensors()
@@ -181,11 +181,6 @@ class Messkarte(object):
     def getP2ManifoldMbar(self):
         return self.p2ManifoldMbar
 
-    def getSolldruck(self):
-        return self.solldruck_mbar
-
-    def setSolldruck(self, solldruck):
-        self.solldruck_mbar = solldruck
 
     def readSensors(self):
         # sensoren auslesen. bisher nur zwei stück
@@ -200,6 +195,9 @@ class Messkarte(object):
                 # aktuelle Druckwerte als floats speichern
                 self.p1ProbeMbar = data[0] * 10
                 self.p2ManifoldMbar = data[1] * 10
+                self.Messtime = time.time() - self.timeStartMessung
+
+
                 # In logger anzeigen
                 stringp = ("p1ProbeMbar = " + str(self.p1ProbeMbar) + ";\tp2ManifoldMbar = " + str(self.p2ManifoldMbar))
                 self.Messkartenlogger.info(stringp)
@@ -208,11 +206,12 @@ class Messkarte(object):
                 # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
                 self.p1ProbeArray.append(self.p1ProbeMbar)
                 self.p2ManifoldArray.append(self.p2ManifoldMbar)
-
+                self.timearray.append(self.Messtime)
                 # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
                 if len(self.p1ProbeArray) > self.datenbufferlaenge:
                     self.p1ProbeArray.pop(0)
                     self.p2ManifoldArray.pop(0)
+                    self.timearray.pop(0)
                     self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
                 # Strings zum loggen erstellen und dann mit Messkartenlogger loggen

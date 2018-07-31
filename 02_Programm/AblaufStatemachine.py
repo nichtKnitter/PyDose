@@ -18,7 +18,7 @@ Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
 
 class robotStateMachine(object):
     states = ['start_gereat', 'start_messung', 'start_cycle', 'segmentpruefung', 'messen', 'regelmoduspruefung',
-              'regeln_langsam', 'regelnLangsamPropventil', 'warten', 'VentileAusschalten', 'messenCont']
+              'regeln_langsam', 'regelnLangsamPropventil', 'warten', 'VentileAusschalten', 'messenCont', 'UserInput']
     # segTime = 0
     # tacktzeit = 0
 
@@ -42,6 +42,7 @@ class robotStateMachine(object):
     def __init__(self, activeOnStart=False):
 
         self.userCommandManual = 'NA'
+        self.newUserCommand = False
 
         self.isRunning = activeOnStart
 
@@ -154,6 +155,18 @@ class robotStateMachine(object):
             dest='warten',
             trigger='tock'
         )
+        self.machine.add_transition(
+            trigger='tock',
+            source='warten',
+            dest='UserInput',
+            conditions=['testUserInput', 'testLastDAQAction'],
+            after='doUserInput'
+        )
+        self.machine.add_transition(
+            trigger='tock',
+            source='UserInput',
+            dest='warten'
+        )
 
         self.machine.add_transition(  # hat hoehere Prio als messen?
             source='warten',
@@ -217,6 +230,26 @@ class robotStateMachine(object):
     def printTransition(self):
         # print("state gewechselt zu:\t", self.state)
         pass
+
+    def testUserInput(self):
+        return self.newUserCommand
+
+    def setUserCommand(self, Befehl):
+        print('new user command accepted')
+        self.userCommandManual = Befehl
+        self.newUserCommand = True
+        print(self.userCommandManual, self.newUserCommand)
+
+    def doUserInput(self):
+        if self.userCommandManual == 'evacSample':
+            print('try to evac manually')
+            # self.localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(
+            #     self.localRobotStMachObj.MesskarteObj.vStateSollProbeEvakGrob)
+            self.newUserCommand = False
+        if self.userCommandManual == 'alleAuf':
+            # self.localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(
+            #     self.localRobotStMachObj.MesskarteObj.vStateSollAlleAuf)
+            self.newUserCommand = False
 
 
     def messen(self):

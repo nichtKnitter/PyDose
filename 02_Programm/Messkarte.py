@@ -196,7 +196,7 @@ class Messkarte(object):
         try:
             with nidaqmx.Task() as LeseTask:
                 LeseTask.ai_channels.add_ai_voltage_chan("Dev1/ai0:4",
-                                                         terminal_config=nidaqmx.constants.TerminalConfiguration.NRSE,
+                                                         terminal_config=nidaqmx.constants.TerminalConfiguration.RSE,
                                                          max_val=10,
                                                          min_val=0)  # terminal_config=VentilTask.TerminalConfiguration.NRSE
 

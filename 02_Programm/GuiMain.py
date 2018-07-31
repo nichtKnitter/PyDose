@@ -63,14 +63,16 @@ def on_click():
 @QtCore.pyqtSlot()
 def evacSample():
     print('start evacuating sample')
-    localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollProbeEvakGrob)
+    # 'evacSample'
+    localRobotStMachObj.setUserCommand('evacSample')
+    # localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollProbeEvakGrob)
 
 
 @QtCore.pyqtSlot()
 def alleAuf():
     print('alle Ventile auf')
-    localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollAlleAuf)
-
+    # localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollAlleAuf)
+    localRobotStMachObj.setUserCommand('alleAuf')
 
 btn = QtGui.QPushButton('start control')
 btn.setToolTip('This is an example button')

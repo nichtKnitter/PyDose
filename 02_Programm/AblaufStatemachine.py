@@ -39,12 +39,9 @@ class robotStateMachine(object):
     MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollAlleZu)
     aktuellerModus = "vStateSollAlleZu"
 
+    def __init__(self, activeOnStart=False):
 
-    def __init__(self, startparameter1):
-
-        self.name = startparameter1
-
-        self.isRunning = False
+        self.isRunning = activeOnStart
 
         # aktueller Solldruck
         self.pSollMbar = 17
@@ -86,6 +83,8 @@ class robotStateMachine(object):
         # Initialize the state machine
         self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
         self._initTransitions()
+
+        self.messen()
 
     def _initTransitions(self):
         self.machine.add_transition(  # regel 1
@@ -145,21 +144,19 @@ class robotStateMachine(object):
             source='warten',
             dest='VentileAusschalten',
             trigger='tock',
-            after=['printTransition', 'shutOffValves'],
+            after=['shutOffValves'],
             conditions=['hasToShutOffValve']
         )
         self.machine.add_transition(  # regel 3
             source='VentileAusschalten',
             dest='warten',
-            trigger='tock',
-            after=['printTransition']
+            trigger='tock'
         )
 
         self.machine.add_transition(  # hat hoehere Prio als messen?
             source='warten',
             dest='start_cycle',
             trigger='tock',
-            # after=['printTransition'],
             conditions=['testTacktTimer', 'checkIfMachineIsRunning']
         )
         self.machine.add_transition(
@@ -172,9 +169,7 @@ class robotStateMachine(object):
         self.machine.add_transition(
             trigger='tock',
             source='messenCont',
-            dest='warten',
-            conditions=['TestMesstaktOver'],
-            after='messen'
+            dest='warten'
         )
 
     def setSolldruck(self, solldruck):
@@ -223,9 +218,13 @@ class robotStateMachine(object):
     def messen(self):
         self.MesskarteObj.readSensors()
         self.lastDAQAction = time.time()
+        self.lastMeasurement = time.time()
         self.p1ProbeMbar = self.MesskarteObj.getP1ProbeMbar()
         self.p2ManifoldMbar = self.MesskarteObj.getP2ManifoldMbar()
-        self.lastMeasurement = time.time()
+        print(self.p1ProbeMbar, self.p2ManifoldMbar)
+        print(self.MesskarteObj.getp2ManifoldArray())
+        print(self.MesskarteObj.getp1ProbeArray())
+        print(self.MesskarteObj.getTimearray())
 
 
 
@@ -287,7 +286,7 @@ class robotStateMachine(object):
 class globalRobot():
     # Initialisiert ein Statemachine Object von robotStateMachine,
     # und sendet dann in hoher Geschwindigkeit dieses
-    localRobotStMachObj = robotStateMachine("Batman")  # achtung! hier wird batman gleich wieder zerstört
+    localRobotStMachObj = robotStateMachine(activeOnStart=True)  # achtung! hier wird batman gleich wieder zerstört
 
     def run(self):
         time_total = time.time()

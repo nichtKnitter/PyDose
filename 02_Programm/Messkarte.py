@@ -181,6 +181,15 @@ class Messkarte(object):
     def getP2ManifoldMbar(self):
         return self.p2ManifoldMbar
 
+    def getp1ProbeArray(self):
+        return self.p1ProbeArray
+
+    def getp2ManifoldArray(self):
+        return self.p2ManifoldArray
+
+    def getTimearray(self):
+        return self.timearray
+
 
     def readSensors(self):
         # sensoren auslesen. bisher nur zwei stück

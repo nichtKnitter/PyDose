@@ -41,6 +41,8 @@ class robotStateMachine(object):
 
     def __init__(self, activeOnStart=False):
 
+        self.userCommandManual = 'NA'
+
         self.isRunning = activeOnStart
 
         # aktueller Solldruck
@@ -57,7 +59,7 @@ class robotStateMachine(object):
         # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
         self.startAktTackt = time.time()
         self.gereateTackt = 0.5
-        self.messtaktCont = 0.1
+        self.messtaktCont = 0.01
 
         # Schnellmoegliche DAQ Befehl Sequenzen
         self.DAQminimumTakt = 0.01
@@ -157,7 +159,7 @@ class robotStateMachine(object):
             source='warten',
             dest='start_cycle',
             trigger='tock',
-            conditions=['testTacktTimer', 'checkIfMachineIsRunning']
+            conditions=['testRegelTacktTimer', 'checkIfMachineIsRunning']
         )
         self.machine.add_transition(
             trigger='tock',
@@ -179,9 +181,10 @@ class robotStateMachine(object):
         self.startAktTackt = time.time()
         # print ('nextState')
         # self.tock()
-    def testTacktTimer(self):
+
+    def testRegelTacktTimer(self):
         self.num = self.num + 1
-        if self.num == 10:
+        if self.num == 1:
             print('.', end='', flush=True)
             self.num = 0
         # result = True if  else False
@@ -208,6 +211,7 @@ class robotStateMachine(object):
         return (ergebnis)
 
     def checkIfMachineIsRunning(self):
+        print(self.isRunning)
         return self.isRunning
 
     def printTransition(self):
@@ -221,10 +225,10 @@ class robotStateMachine(object):
         self.lastMeasurement = time.time()
         self.p1ProbeMbar = self.MesskarteObj.getP1ProbeMbar()
         self.p2ManifoldMbar = self.MesskarteObj.getP2ManifoldMbar()
-        print(self.p1ProbeMbar, self.p2ManifoldMbar)
-        print(self.MesskarteObj.getp2ManifoldArray())
-        print(self.MesskarteObj.getp1ProbeArray())
-        print(self.MesskarteObj.getTimearray())
+        # print('test', self.p1ProbeMbar, self.p2ManifoldMbar)
+        # print(self.MesskarteObj.getp2ManifoldArray())
+        # print(self.MesskarteObj.getp1ProbeArray())
+        # print(self.MesskarteObj.getTimearray())
 
 
 

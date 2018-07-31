@@ -13,7 +13,7 @@ class Messkarte(object):
     # dict zum verfolgen der States der Ventile, damit die nur geschaltet werden wenn es nötig ist.
     v_state = {}
 
-    datenbufferlaenge = 100
+    datenbufferlaenge = 1000
     timeStartMessung = time.time()
     timearray = []
     p1ProbeArray = []  # pProbeMbar
@@ -23,7 +23,7 @@ class Messkarte(object):
 
         ##############################################################################
         # logging optionen
-        self.debugOn = True
+        self.numberOfCommuicationErrors = 0
         # Create the Logger
         self.Messkartenlogger = logging.getLogger(__name__)
         self.Messkartenlogger.setLevel(logging.INFO)
@@ -231,6 +231,7 @@ class Messkarte(object):
                 return data
         except nidaqmx.DaqError as e:
             print(e)
+            self.numberOfCommuicationErrors += 1
 
 
 
@@ -253,6 +254,7 @@ class Messkarte(object):
                     print("in Ventil.task", self.v_state["V_Prop"])
                 except nidaqmx.DaqError as e:
                     print(e)
+                    self.numberOfCommuicationErrors += 1
 
     def v_Prop_Stellgrad(self, Prozent):
 
@@ -272,6 +274,7 @@ class Messkarte(object):
                 print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t', usoll)
             except nidaqmx.DaqError as e:
                 print(e)
+                self.numberOfCommuicationErrors += 1
         return self.v_state
 
     def _alle_aus(self):
@@ -317,6 +320,7 @@ class Messkarte(object):
 
                     except nidaqmx.DaqError as e:
                         print(e)
+                        self.numberOfCommuicationErrors += 1
         if (Befehl_in == "aus"):
             self.Messkartenlogger.info(self.v_state)
             self.Messkartenlogger.info(Ventil_name)
@@ -336,6 +340,7 @@ class Messkarte(object):
                         print("in Ventil.task", self.v_state[Ventil_name])
                     except nidaqmx.DaqError as e:
                         print(e)
+                        self.numberOfCommuicationErrors += 1
         if (einzeln_deaktivieren == True and Befehl_in != "aus"):
             time.sleep(0.5)
             with nidaqmx.Task() as VentilTask:
@@ -349,6 +354,7 @@ class Messkarte(object):
                     print("in Ventil.task", self.v_state[Ventil_name])
                 except nidaqmx.DaqError as e:
                     print(e)
+                    self.numberOfCommuicationErrors += 1
 
     def _Ventiladressen(self, Ventil_name):  # Todo: durch dict ersetzen
         if (Ventil_name == "V1"):

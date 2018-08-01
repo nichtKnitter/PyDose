@@ -61,10 +61,10 @@ class robotStateMachine(object):
         # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
         self.startAktTackt = time.time()
         self.gereateTackt = 0.5
-        self.messtaktCont = 0.01
+        self.messtaktCont = 0.1
 
         # Schnellmoegliche DAQ Befehl Sequenzen
-        self.DAQminimumTakt = 0.01
+        self.DAQminimumTakt = 0.005
         self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
         ## minimum Aktivzeit für Ventile ~ 0.35 s
@@ -112,36 +112,34 @@ class robotStateMachine(object):
         )
         self.machine.add_transition(  # regel 3
             source='segmentpruefung',
-            dest='messen',
-            trigger='tock',
-            after=['messen'],
-            conditions=['testLastDAQAction']
-        )
-        self.machine.add_transition(  # regel 3
-            source='messen',
             dest='regelmoduspruefung',
-            trigger='tock',
-            after=['printTransition']
-            # ,            conditions=[self.testTimeisUp]
+            trigger='tock'
+            # after=['messen'],
+            # conditions=['testLastDAQAction']
         )
+        # self.machine.add_transition(  # regel 3
+        #     source='messen',
+        #     dest='regelmoduspruefung',
+        #     trigger='tock'
+        # )
         self.machine.add_transition(  # regel 3
             source='regelmoduspruefung',
             dest='regeln_langsam',
             trigger='tock',
-            after=['printTransition', 'regeln_langsam']
+            after=['regeln_langsam'],
+            conditions=['testLastDAQAction']
         )
         self.machine.add_transition(  # regel 3
             source='regeln_langsam',
             dest='regelnLangsamPropventil',
             trigger='tock',
-            after=['printTransition', 'setPropStellgrad'],
+            after=['setPropStellgrad'],
             conditions=['testLastDAQAction']
         )
         self.machine.add_transition(  # regel 3
             source='regelnLangsamPropventil',
             dest='warten',
-            trigger='tock',
-            after=['printTransition']
+            trigger='tock'
         )
         ### aus Warten in Ventile Ausschalten und zurück
         self.machine.add_transition(  # muss vor transition zu start cycle gemacht werden, damit das höhere Pr
@@ -179,7 +177,7 @@ class robotStateMachine(object):
             trigger='tock',
             source='warten',
             dest='messenCont',
-            conditions=['TestMesstaktOver'],
+            conditions=['TestMesstaktOver', 'testLastDAQAction'],
             after='messen'
         )
         self.machine.add_transition(
@@ -187,6 +185,9 @@ class robotStateMachine(object):
             source='messenCont',
             dest='warten'
         )
+
+    def getVState(self):
+        return self.MesskarteObj.getVState()
 
     def setSolldruck(self, solldruck):
         self.pSollMbar = solldruck
@@ -197,14 +198,14 @@ class robotStateMachine(object):
         # self.tock()
 
     def testRegelTacktTimer(self):
-        self.num = self.num + 1
-        if self.num == 1:
-            print('.', end='', flush=True)
-            self.num = 0
+        # self.num = self.num + 1
+        # if self.num == 1:
+        print('.', end='', flush=True)
+        # self.num = 0
         # result = True if  else False
         if (time.time() - self.startAktTackt >= self.gereateTackt):
             result = True
-            print()
+            # print()
         else:
             result = False
 
@@ -225,7 +226,7 @@ class robotStateMachine(object):
         return (ergebnis)
 
     def checkIfMachineIsRunning(self):
-        print(self.isRunning)
+        # print(self.isRunning)
         return self.isRunning
 
     def printTransition(self):
@@ -271,6 +272,13 @@ class robotStateMachine(object):
             self.newUserCommand = False
             self.valveActivationTracker()
             self.aktuellerModus = "vStateSollEvakFine"
+        if self.userCommandManual == 'DegassEvaporator':
+            self.MesskarteObj.Ventile_schalten_ges(
+                self.MesskarteObj.vStateSollDegassEvaporator, False)
+            self.newUserCommand = False
+            self.valveActivationTracker()
+            self.aktuellerModus = "vStateSollDegassEvaporator"
+
 
     def valveActivationTracker(self):
         self.lastDAQAction = time.time()

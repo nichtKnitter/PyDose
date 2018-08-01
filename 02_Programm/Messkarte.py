@@ -13,7 +13,7 @@ class Messkarte(object):
     # dict zum verfolgen der States der Ventile, damit die nur geschaltet werden wenn es nötig ist.
     v_state = {}
 
-    datenbufferlaenge = 1000
+    datenbufferlaenge = 10000  # ~80 mb, 1000 sind 8Mibi
     timeStartMessung = time.time()
     timearray = []
     p1ProbeArray = []  # pProbeMbar
@@ -39,6 +39,8 @@ class Messkarte(object):
 
         # erstmaliges lesen der sensoren
         self.readSensors()
+        self.timeBetweenValveActions = 0.01  ## Wenn zu schnell hintereinander gibt es Komminikationfehler
+        time.sleep(self.timeBetweenValveActions)
 
         # definition der Relaiszustände für die Ventile pro Kanal
         self.ventil_auf = [True, False]
@@ -174,6 +176,9 @@ class Messkarte(object):
         self.vStateSollDoseFineVol1["V6"] = {"state": "zu"}
         self.vStateSollDoseFineVol1["V7"] = {"state": "zu"}
         self.vStateSollDoseFineVol1["V_Prop"] = {"state": "aus"}
+
+    def getVState(self):
+        return self.v_state
 
     def getP1ProbeMbar(self):
         return self.p1ProbeMbar
@@ -316,7 +321,7 @@ class Messkarte(object):
                         self.Messkartenlogger.info("in Ventil.task" + str(self.v_state[Ventil_name]))
                         # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
                         self.lastValveActivation = time.time()
-                        time.sleep(0.01)
+                        time.sleep(self.timeBetweenValveActions)
 
                     except nidaqmx.DaqError as e:
                         print(e)
@@ -338,6 +343,8 @@ class Messkarte(object):
                         # v_state[Ventil_name]["state"] = "aus"
                         print("Ventil:\t", Ventil_name, "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
                         print("in Ventil.task", self.v_state[Ventil_name])
+                        time.sleep(self.timeBetweenValveActions)
+
                     except nidaqmx.DaqError as e:
                         print(e)
                         self.numberOfCommuicationErrors += 1
@@ -407,4 +414,4 @@ class Messkarte(object):
 if __name__ == '__main__':
     V = Messkarte()
     # V.Ventile_schalten_ges(V.vStateSollVolumenEvakGrob)
-    V.Ventile_schalten_ges(V.vStateSollProbeEvakGrob)
+    # V.Ventile_schalten_ges(V.vStateSollProbeEvakGrob)

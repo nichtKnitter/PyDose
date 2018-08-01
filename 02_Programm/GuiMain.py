@@ -51,6 +51,10 @@ pw = pg.PlotWidget(name='Plot1')  ## giving the plots names allows us to link th
 l.addWidget(pw)
 
 
+def stateUpdate():
+    vState = localRobotStMachObj.getVState()
+    print(vState)
+
 @QtCore.pyqtSlot()
 def on_click():
     print('PyQt5 button click')
@@ -58,33 +62,87 @@ def on_click():
         localRobotStMachObj.isRunning = False
     else:
         localRobotStMachObj.isRunning = True
-
+    stateUpdate()
 
 @QtCore.pyqtSlot()
 def evacSample():
     print('start evacuating sample')
     localRobotStMachObj.setUserCommand('evacSample')
-
+    stateUpdate()
 
 @QtCore.pyqtSlot()
 def alleAuf():
     print('alle Ventile auf')
     localRobotStMachObj.setUserCommand('alleAuf')
-
+    stateUpdate()
 
 @QtCore.pyqtSlot()
 def AlleZu():
     print('alle Ventile auf')
     localRobotStMachObj.setUserCommand('AlleZu')
-
+    stateUpdate()
 
 @QtCore.pyqtSlot()
 def EvakFine():
     print('Evac Fine')
     localRobotStMachObj.setUserCommand('EvakFine')
+    stateUpdate()
 
 
+@QtCore.pyqtSlot()
+def DegassEvaporator():
+    print('Degass Evaporator')
+    localRobotStMachObj.setUserCommand('DegassEvaporator')
+    stateUpdate()
 
+
+@QtCore.pyqtSlot()
+def V1():
+    localRobotStMachObj.setUserCommand('V1')
+    localRobotStMachObj.getVState()
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V2():
+    localRobotStMachObj.setUserCommand('V2')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V3():
+    localRobotStMachObj.setUserCommand('V3')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V4():
+    localRobotStMachObj.setUserCommand('V4')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V5():
+    localRobotStMachObj.setUserCommand('V5')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V6():
+    localRobotStMachObj.setUserCommand('V6')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def V7():
+    localRobotStMachObj.setUserCommand('V7')
+    stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def VProp():
+    localRobotStMachObj.setUserCommand('VProp')
+    stateUpdate()
 
 btn = QtGui.QPushButton('start control')
 btn.setToolTip('This is an example button')
@@ -107,7 +165,49 @@ AlleZuBtn = QtGui.QPushButton('Close all Valves')
 l.addWidget(AlleZuBtn)
 AlleZuBtn.clicked.connect(AlleZu)
 
+DegassEvaporatorBtn = QtGui.QPushButton('Degass Evaporator')
+l.addWidget(DegassEvaporatorBtn)
+DegassEvaporatorBtn.clicked.connect(DegassEvaporator)
 
+V1Btn = QtGui.QPushButton('V1')
+l.addWidget(V1Btn)
+V1Btn.clicked.connect(V1)
+V1Btn.setCheckable(True)
+
+V2Btn = QtGui.QPushButton('V2')
+l.addWidget(V2Btn)
+V2Btn.clicked.connect(V2)
+V2Btn.setCheckable(True)
+
+V3Btn = QtGui.QPushButton('V3')
+l.addWidget(V3Btn)
+V3Btn.clicked.connect(V3)
+V3Btn.setCheckable(True)
+
+V4Btn = QtGui.QPushButton('V4')
+l.addWidget(V4Btn)
+V4Btn.clicked.connect(V4)
+V4Btn.setCheckable(True)
+
+V5Btn = QtGui.QPushButton('V5')
+l.addWidget(V5Btn)
+V5Btn.clicked.connect(V5)
+V5Btn.setCheckable(True)
+
+V6Btn = QtGui.QPushButton('V6')
+l.addWidget(V6Btn)
+V6Btn.clicked.connect(V6)
+V6Btn.setCheckable(True)
+
+V7Btn = QtGui.QPushButton('V7')
+l.addWidget(V7Btn)
+V7Btn.clicked.connect(V7)
+V7Btn.setCheckable(True)
+
+VPropBtn = QtGui.QPushButton('VProp On/Off')
+l.addWidget(VPropBtn)
+VPropBtn.clicked.connect(VProp)
+VPropBtn.setCheckable(True)
 
 text = QtGui.QLineEdit('enter text')
 l.addWidget(text)
@@ -163,13 +263,14 @@ def UpdateStateMachine():
 
 t = QtCore.QTimer()
 t.timeout.connect(updateData)
-t.start(100)
-# updateData()
+t.start(16)  # in msec, 16 entsprechen 60 Hz
+
 
 
 timerStatemachine = QtCore.QTimer()
 timerStatemachine.timeout.connect(UpdateStateMachine)
-timerStatemachine.start(100)
+## Statemachinetimer muss deutlich schneller sein als der Geräte/Regeltakt, sonst wird Messen nicht ausgelöst
+timerStatemachine.start(1)  # in msec
 
 ## Multiple parameterized plots--we can autogenerate averages for these.
 # for i in range(0, 5):

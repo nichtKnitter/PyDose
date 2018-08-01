@@ -52,8 +52,56 @@ l.addWidget(pw)
 
 
 def stateUpdate():
+    # print('State Update')
     vState = localRobotStMachObj.getVState()
-    print(vState)
+    # print(vState)
+    if vState['V1']['state'] == 'zu':
+        V1Btn.setChecked(False)
+    else:
+        V1Btn.setChecked(True)
+
+    if vState['V2']['state'] == 'zu':
+        V2Btn.setChecked(False)
+    else:
+        V2Btn.setChecked(True)
+
+    if vState['V3']['state'] == 'zu':
+        V3Btn.setChecked(False)
+    else:
+        V3Btn.setChecked(True)
+
+    if vState['V4']['state'] == 'zu':
+        V4Btn.setChecked(False)
+    else:
+        V4Btn.setChecked(True)
+
+    if vState['V5']['state'] == 'zu':
+        V5Btn.setChecked(False)
+    else:
+        V5Btn.setChecked(True)
+
+    if vState['V6']['state'] == 'zu':
+        V6Btn.setChecked(False)
+    else:
+        V6Btn.setChecked(True)
+
+    if vState['V7']['state'] == 'zu':
+        V7Btn.setChecked(False)
+    else:
+        V7Btn.setChecked(True)
+
+    if vState["V_Prop"]["state"] == 'an':
+        VPropBtn.setChecked(True)
+    else:
+        VPropBtn.setChecked(False)
+
+    if vState["V_Prop"]["stellgrad"] >= 50:
+        VPropBtn.setChecked(True)
+    else:
+        VPropBtn.setChecked(False)
+
+
+
 
 @QtCore.pyqtSlot()
 def on_click():
@@ -138,11 +186,17 @@ def V7():
     localRobotStMachObj.setUserCommand('V7')
     stateUpdate()
 
-
 @QtCore.pyqtSlot()
 def VProp():
     localRobotStMachObj.setUserCommand('VProp')
     stateUpdate()
+
+
+@QtCore.pyqtSlot()
+def VPropStellgrad():
+    localRobotStMachObj.setUserCommand('VPropStellgrad')
+    stateUpdate()
+
 
 btn = QtGui.QPushButton('start control')
 btn.setToolTip('This is an example button')
@@ -209,6 +263,12 @@ l.addWidget(VPropBtn)
 VPropBtn.clicked.connect(VProp)
 VPropBtn.setCheckable(True)
 
+VPropStellgradBtn = QtGui.QPushButton('VProp Stellgrad')
+l.addWidget(VPropStellgradBtn)
+VPropStellgradBtn.clicked.connect(VPropStellgrad)
+VPropStellgradBtn.setCheckable(True)
+
+
 text = QtGui.QLineEdit('enter text')
 l.addWidget(text)
 
@@ -271,6 +331,11 @@ timerStatemachine = QtCore.QTimer()
 timerStatemachine.timeout.connect(UpdateStateMachine)
 ## Statemachinetimer muss deutlich schneller sein als der Geräte/Regeltakt, sonst wird Messen nicht ausgelöst
 timerStatemachine.start(1)  # in msec
+
+# Timer zum Update der Knöpfe
+buttonTimer = QtCore.QTimer()
+buttonTimer.timeout.connect(stateUpdate)
+buttonTimer.start(500)  # in msec, 16 entsprechen 60 Hz
 
 ## Multiple parameterized plots--we can autogenerate averages for these.
 # for i in range(0, 5):

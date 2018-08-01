@@ -113,11 +113,11 @@ class Messkarte(object):
 
         self.vStateSollDoseFine = {}
         self.vStateSollDoseFine["State"] = {"Name": "vStateSollDoseFine"}
-        self.vStateSollDoseFine["V1"] = {"state": "auf"}
+        self.vStateSollDoseFine["V1"] = {"state": "zu"}
         self.vStateSollDoseFine["V2"] = {"state": "zu"}
-        self.vStateSollDoseFine["V3"] = {"state": "zu"}
-        self.vStateSollDoseFine["V4"] = {"state": "auf"}
-        self.vStateSollDoseFine["V5"] = {"state": "zu"}
+        self.vStateSollDoseFine["V3"] = {"state": "auf"}
+        self.vStateSollDoseFine["V4"] = {"state": "zu"}
+        self.vStateSollDoseFine["V5"] = {"state": "auf"}
         self.vStateSollDoseFine["V6"] = {"state": "auf"}
         self.vStateSollDoseFine["V7"] = {"state": "zu"}
         self.vStateSollDoseFine["V_Prop"] = {"state": "an"}

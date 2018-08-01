@@ -54,6 +54,7 @@ class robotStateMachine(object):
         # couter für die punkte die beim warten geprintet werden
         self.num = 0
 
+        # TODO:
         # startzeit des aktuellen Segmentes
         self.segTime = time.time()
 
@@ -107,13 +108,13 @@ class robotStateMachine(object):
             source='start_cycle',
             dest='segmentpruefung',
             trigger='tock',
-            after=['printTransition', 'resetTacktTimer']
+            after=['resetTacktTimer']
         )
         self.machine.add_transition(  # regel 3
             source='segmentpruefung',
             dest='messen',
             trigger='tock',
-            after=['printTransition', 'messen'],
+            after=['messen'],
             conditions=['testLastDAQAction']
         )
         self.machine.add_transition(  # regel 3

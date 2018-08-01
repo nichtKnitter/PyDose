@@ -117,10 +117,11 @@ l.addWidget(listw)
 mw.show()
 
 ## Create an empty plot curve to be filled later, set its pen
-p1 = pw.plot()
-p2 = pw.plot()
+pw.addLegend()
+p1 = pw.plot(name="Pressure Sample")
+p2 = pw.plot(name="Pressure Manifold")
 
-pw.setLabel('left', 'Value', units='V')
+pw.setLabel('left', 'Value', units='mbar')
 pw.setLabel('bottom', 'Time', units='s')
 
 
@@ -130,18 +131,9 @@ pw.setLabel('bottom', 'Time', units='s')
 
 
 def updateData():
-    # p1.setData(y=yd, x=xd)
     # Guilogger.info('try Update: p1')
-    p2array = localRobotStMachObj.MesskarteObj.getp2ManifoldArray()
-    # Guilogger.info(str(p1array))
-    # Guilogger.info("p1 zugriff erfolgreich")
-
-    # Guilogger.info("try p2")
     p1array = localRobotStMachObj.MesskarteObj.getp1ProbeArray()
-    # Guilogger.info(str(p2array))
-    # Guilogger.info(" p2 zugriff erfolgreich")
-
-    # Guilogger.info("try p2 array")
+    p2array = localRobotStMachObj.MesskarteObj.getp2ManifoldArray()
     timearray = localRobotStMachObj.MesskarteObj.getTimearray()
     # Guilogger.info(str(timearray))
     # Guilogger.info("timezugriff erfolgreich")
@@ -154,8 +146,11 @@ def updateData():
     maxPressure1 = max(p1array)
     maxPressure2 = max(p2array)
     # max(maxPressure1,maxPressure2)
-    # print("maxPressure",maxPressure)
-    # pw.setYRange(0, maxPressure)
+    # print("maxPressure1",maxPressure1)
+    # if maxPressure1 >= maxPressure2:
+    #     pw.setYRange(0, maxPressure1)
+    # else:
+    #     pw.setYRange(0, maxPressure2)
 
 
 def UpdateStateMachine():

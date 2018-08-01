@@ -36,8 +36,8 @@ class robotStateMachine(object):
     # aktuellerModus = "vStateSollDegassEvaporator"
     # time.sleep(0.5)
 
-    MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollAlleZu)
-    aktuellerModus = "vStateSollAlleZu"
+    # MesskarteObj.Ventile_schalten_ges(MesskarteObj.vStateSollAlleZu)
+    # aktuellerModus = "vStateSollAlleZu"
 
     def __init__(self, activeOnStart=False):
 
@@ -78,10 +78,10 @@ class robotStateMachine(object):
             0.1)  # hier noch haendisch, wird spaeter über states geprueft ob letztes Messkartenereigniss lange genug her
 
         # Alle Ventile beim Starten zu:
-        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, shutOffAuto=True)
-        self.aktuellerModus = "vStateSollAlleZu"
-        self.lastDAQAction = time.time()
-        self.anyValveOn = False
+        # self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, shutOffAuto=True)
+        self.aktuellerModus = "NA"
+        # self.lastDAQAction = time.time()
+        # self.anyValveOn = False
 
         # Initialize the state machine
         self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
@@ -241,16 +241,40 @@ class robotStateMachine(object):
         print(self.userCommandManual, self.newUserCommand)
 
     def doUserInput(self):
+        print('doUserInput')
         if self.userCommandManual == 'evacSample':
             print('try to evac manually')
-            # self.localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(
-            #     self.localRobotStMachObj.MesskarteObj.vStateSollProbeEvakGrob)
+            self.MesskarteObj.Ventile_schalten_ges(
+                self.MesskarteObj.vStateSollProbeEvakGrob, False)
             self.newUserCommand = False
-        if self.userCommandManual == 'alleAuf':
-            # self.localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(
-            #     self.localRobotStMachObj.MesskarteObj.vStateSollAlleAuf)
-            self.newUserCommand = False
+            self.valveActivationTracker()
+            self.aktuellerModus = "vStateSollProbeEvakGrob"
 
+        if self.userCommandManual == 'alleAuf':
+            self.MesskarteObj.Ventile_schalten_ges(
+                self.MesskarteObj.vStateSollAlleAuf, False)
+            self.newUserCommand = False
+            self.valveActivationTracker()
+            self.aktuellerModus = "vStateSollAlleAuf"
+
+        if self.userCommandManual == 'AlleZu':
+            self.MesskarteObj.Ventile_schalten_ges(
+                self.MesskarteObj.vStateSollAlleZu, False)
+            self.newUserCommand = False
+            self.valveActivationTracker()
+            self.aktuellerModus = "vStateSollAlleZu"
+
+        if self.userCommandManual == 'EvakFine':
+            self.MesskarteObj.Ventile_schalten_ges(
+                self.MesskarteObj.vStateSollEvakFine, False)
+            self.newUserCommand = False
+            self.valveActivationTracker()
+            self.aktuellerModus = "vStateSollEvakFine"
+
+    def valveActivationTracker(self):
+        self.lastDAQAction = time.time()
+        self.lastValveActivation = time.time()
+        self.anyValveOn = True
 
     def messen(self):
         self.MesskarteObj.readSensors()
@@ -272,47 +296,38 @@ class robotStateMachine(object):
                 print("V_Dose_Fine: nach oben")
                 if self.aktuellerModus != "vStateSollDoseFine":  # nur wenn er es nicht eh schon macht
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
-                    self.lastDAQAction = time.time()
                     self.aktuellerModus = "vStateSollDoseFine"
                     # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
-                    self.lastValveActivation = time.time()
-                    self.anyValveOn = True
+                    self.valveActivationTracker()
+
 
             elif self.p1ProbeMbar > (self.pSollMbar + self.maxDeltaPAllowedMbar):
                 print("V evac Fine: nach unten")
                 if self.aktuellerModus != "vStateSollProbeEvakGrob":  # nur wenn er es nicht eh schon macht
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollProbeEvakGrob, False)
-                    self.lastDAQAction = time.time()
                     self.aktuellerModus = "vStateSollProbeEvakGrob"
                     # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
-                    self.lastValveActivation = time.time()
-                    self.anyValveOn = True
+                    self.valveActivationTracker()
+
             else:
                 if self.aktuellerModus != "vStateSollAlleZu":  # nur wenn er es nicht eh schon macht
-                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, False)
                     print("Hold")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, False)
                     self.aktuellerModus = "vStateSollAlleZu"
                     # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
-                    self.lastValveActivation = time.time()
-                    self.anyValveOn = True
+                    self.valveActivationTracker()
 
     def setPropStellgrad(self):
         self.MesskarteObj.v_Prop_Stellgrad(0)
         self.lastDAQAction = time.time()
 
     def hasToShutOffValve(self):
-        # print(self.anyValveOn)
-        # print(time.time()-self.lastDAQAction, self.DAQminimumTakt)
-        # print (time.time()-self.lastValveActivation)
-        # print(self.lastValveActivation)
-        # print(time.time() - self.lastValveActivation)
-        # print(self.minimumValveOnTime)
+        # Überprüft ob ein Ventil an ist und die festgelegt minimumaktivierungszeit vorbei ist
         if self.anyValveOn is True and (time.time() - self.lastValveActivation) > self.minimumValveOnTime:
-            # time.time()-self.lastDAQAction > self.DAQminimumTakt and \
             result = True
         else:
             result = False
-        return (result)
+        return result
 
     def shutOffValves(self):
         self.MesskarteObj._alle_aus()

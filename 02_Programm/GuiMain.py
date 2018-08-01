@@ -63,16 +63,28 @@ def on_click():
 @QtCore.pyqtSlot()
 def evacSample():
     print('start evacuating sample')
-    # 'evacSample'
     localRobotStMachObj.setUserCommand('evacSample')
-    # localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollProbeEvakGrob)
 
 
 @QtCore.pyqtSlot()
 def alleAuf():
     print('alle Ventile auf')
-    # localRobotStMachObj.MesskarteObj.Ventile_schalten_ges(localRobotStMachObj.MesskarteObj.vStateSollAlleAuf)
     localRobotStMachObj.setUserCommand('alleAuf')
+
+
+@QtCore.pyqtSlot()
+def AlleZu():
+    print('alle Ventile auf')
+    localRobotStMachObj.setUserCommand('AlleZu')
+
+
+@QtCore.pyqtSlot()
+def EvakFine():
+    print('Evac Fine')
+    localRobotStMachObj.setUserCommand('EvakFine')
+
+
+
 
 btn = QtGui.QPushButton('start control')
 btn.setToolTip('This is an example button')
@@ -83,9 +95,19 @@ evacBtn = QtGui.QPushButton('evac Sample')
 l.addWidget(evacBtn)
 evacBtn.clicked.connect(evacSample)
 
+EvakFineBtn = QtGui.QPushButton('Evac Slow')
+l.addWidget(EvakFineBtn)
+EvakFineBtn.clicked.connect(EvakFine)
+
 alleAufBtn = QtGui.QPushButton('All Valves Open')
 l.addWidget(alleAufBtn)
 alleAufBtn.clicked.connect(alleAuf)
+
+AlleZuBtn = QtGui.QPushButton('Close all Valves')
+l.addWidget(AlleZuBtn)
+AlleZuBtn.clicked.connect(AlleZu)
+
+
 
 text = QtGui.QLineEdit('enter text')
 l.addWidget(text)

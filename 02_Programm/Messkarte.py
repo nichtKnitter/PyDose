@@ -16,10 +16,13 @@ class Messkarte(object):
     datenbufferlaenge = 10000  # ~80 mb, 1000 sind 8Mibi
     timeStartMessung = time.time()
     timearray = []
-    p1ProbeArray = []  # pProbeMbar
-    p2ManifoldArray = []  # pManifoldMbar
+    p1ManifoldArray = []  # pProbeMbar
+    p2ProbeArray = []  # pManifoldMbar
 
     def __init__(self):
+
+        self.timeBetweenValveActions = 0.2  ## Wenn zu schnell hintereinander gibt es Komminikationfehler
+        ## muss wohl schneller als messtakt sein....
 
         ##############################################################################
         # logging optionen
@@ -39,7 +42,6 @@ class Messkarte(object):
 
         # erstmaliges lesen der sensoren
         self.readSensors()
-        self.timeBetweenValveActions = 0.01  ## Wenn zu schnell hintereinander gibt es Komminikationfehler
         time.sleep(self.timeBetweenValveActions)
 
         # definition der Relaiszustände für die Ventile pro Kanal
@@ -65,7 +67,7 @@ class Messkarte(object):
         self.vStateInit["V5"] = {"id": 5, "state": "NA", "active": "NA"}
         self.vStateInit["V6"] = {"id": 6, "state": "NA", "active": "NA"}
         self.vStateInit["V7"] = {"id": 7, "state": "NA", "active": "NA"}
-        self.vStateInit["V_Prop"] = {"id": 8, "stellgrad": "NA", "state": "NA"}
+        self.vStateInit["V_Prop"] = {"id": 8, "stellgrad": 100, "state": "NA"}
 
         self.vStateSollAlleZu = {}
         self.vStateSollAlleZu["State"] = {"Name": "vStateSollAlleZu"}
@@ -180,17 +182,17 @@ class Messkarte(object):
     def getVState(self):
         return self.v_state
 
-    def getP1ProbeMbar(self):
-        return self.p1ProbeMbar
+    def getP1ManifoldMbar(self):
+        return self.p1ManifoldMbar
 
-    def getP2ManifoldMbar(self):
-        return self.p2ManifoldMbar
+    def getP2ProbeMbar(self):
+        return self.p2ProbeMbar
 
-    def getp1ProbeArray(self):
-        return self.p1ProbeArray
+    def getp1ManifoldArray(self):
+        return self.p1ManifoldArray
 
-    def getp2ManifoldArray(self):
-        return self.p2ManifoldArray
+    def getp2ProbeArray(self):
+        return self.p2ProbeArray
 
     def getTimearray(self):
         return self.timearray
@@ -207,31 +209,31 @@ class Messkarte(object):
 
                 data = LeseTask.read()
                 # aktuelle Druckwerte als floats speichern
-                self.p1ProbeMbar = data[0] * 10
-                self.p2ManifoldMbar = data[1] * 10
+                self.p1ManifoldMbar = data[0] * 10
+                self.p2ProbeMbar = data[1] * 10
                 self.Messtime = time.time() - self.timeStartMessung
 
 
                 # In logger anzeigen
-                stringp = ("p1ProbeMbar = " + str(self.p1ProbeMbar) + ";\tp2ManifoldMbar = " + str(self.p2ManifoldMbar))
+                stringp = ("p1ManifoldMbar = " + str(self.p1ManifoldMbar) + ";\tp2ProbeMbar = " + str(self.p2ProbeMbar))
                 self.Messkartenlogger.info(stringp)
 
                 # daten in arrays abspeichern, mit fester Pufferlaenge
                 # müssen ab und zu geflusht werden, oder einfacher: bei jedem takt wenn mehr als x in array?
-                self.p1ProbeArray.append(self.p1ProbeMbar)
-                self.p2ManifoldArray.append(self.p2ManifoldMbar)
+                self.p1ManifoldArray.append(self.p1ManifoldMbar)
+                self.p2ProbeArray.append(self.p2ProbeMbar)
                 self.timearray.append(self.Messtime)
                 # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
-                if len(self.p1ProbeArray) > self.datenbufferlaenge:
-                    self.p1ProbeArray.pop(0)
-                    self.p2ManifoldArray.pop(0)
+                if len(self.p1ManifoldArray) > self.datenbufferlaenge:
+                    self.p1ManifoldArray.pop(0)
+                    self.p2ProbeArray.pop(0)
                     self.timearray.pop(0)
                     self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
                 # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
-                stringp1 = ("aktueller p1 array:\t" + str(self.p1ProbeArray))
+                stringp1 = ("aktueller p1 array:\t" + str(self.p1ManifoldArray))
                 self.Messkartenlogger.info(stringp1)
-                stringp2 = ("aktueller p2 array:\t" + str(self.p2ManifoldArray))
+                stringp2 = ("aktueller p2 array:\t" + str(self.p2ProbeArray))
                 self.Messkartenlogger.info(stringp2)
                 return data
         except nidaqmx.DaqError as e:
@@ -257,6 +259,8 @@ class Messkarte(object):
                     self.v_state["V_Prop"]["state"] = Befehl_in
                     print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
                     print("in Ventil.task", self.v_state["V_Prop"])
+                    time.sleep(self.timeBetweenValveActions)
+
                 except nidaqmx.DaqError as e:
                     print(e)
                     self.numberOfCommuicationErrors += 1
@@ -277,6 +281,8 @@ class Messkarte(object):
                 VentilTask.write(usoll)
                 self.v_state["V_Prop"]["stellgrad"] = Prozent
                 print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t', usoll)
+                time.sleep(self.timeBetweenValveActions)
+
             except nidaqmx.DaqError as e:
                 print(e)
                 self.numberOfCommuicationErrors += 1
@@ -284,12 +290,12 @@ class Messkarte(object):
 
     def _alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
-        self.Ventil_schalten_einzeln("V1", "aus", False)
-        self.Ventil_schalten_einzeln("V2", "aus", False)
         self.Ventil_schalten_einzeln("V3", "aus", False)
         self.Ventil_schalten_einzeln("V4", "aus", False)
         self.Ventil_schalten_einzeln("V5", "aus", False)
         self.Ventil_schalten_einzeln("V6", "aus", False)
+        self.Ventil_schalten_einzeln("V1", "aus", False)
+        self.Ventil_schalten_einzeln("V2", "aus", False)
         self.Ventil_schalten_einzeln("V7", "aus", False)
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
@@ -398,14 +404,15 @@ class Messkarte(object):
         # for blabla in v_state:
         #     print(blabla)
         #     print(v_state[blabla])
-        self.Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], False)
-        self.Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], False)
-        self.Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], False)
+        self.v_state["State"]["Name"] = v_state_soll["State"]["Name"]
+        self.vPropAnAus(v_state_soll["V_Prop"]["state"])
+        self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
         self.Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], False)
         self.Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], False)
-        self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
+        self.Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], False)
+        self.Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], False)
+        self.Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], False)
         self.Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
-        self.vPropAnAus( v_state_soll["V_Prop"]["state"])
         if shutOffAuto == True:
             ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
             time.sleep(0.5)

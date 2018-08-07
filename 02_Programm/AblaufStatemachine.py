@@ -21,13 +21,13 @@ class robotStateMachine(object):
     # segTime = 0
     # tacktzeit = 0
 
-    MesskarteObj = Messkarte.Messkarte(timeBetweenValveActions = 0.001)
+    MesskarteObj = Messkarte.Messkarte(timeBetweenValveActions=0.001, isDebugDummyMode=True)
 
     def __init__(self, activeOnStart=False):
 
         # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
         self.startAktTackt = time.time()
-        self.gereateTackt = 0.02
+        self.gereateTackt = 0.002
         self.messtaktCont = 0.001
 
         # Schnellmoegliche DAQ Befehl Sequenzen
@@ -108,16 +108,16 @@ class robotStateMachine(object):
         )
         self.machine.add_transition(  # regel 3
             source='segmentpruefung',
+            dest='messen',
+            trigger='tock',
+            after=['messen'],
+            conditions=['testLastDAQAction']
+        )
+        self.machine.add_transition(  # regel 3
+            source='messen',
             dest='regelmoduspruefung',
             trigger='tock'
-            # after=['messen'],
-            # conditions=['testLastDAQAction']
         )
-        # self.machine.add_transition(  # regel 3
-        #     source='messen',
-        #     dest='regelmoduspruefung',
-        #     trigger='tock'
-        # )
         self.machine.add_transition(  # regel 3
             source='regelmoduspruefung',
             dest='regeln_langsam',

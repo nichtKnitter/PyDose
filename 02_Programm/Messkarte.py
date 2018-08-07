@@ -19,9 +19,9 @@ class Messkarte(object):
     p1ManifoldArray = []  # pProbeMbar
     p2ProbeArray = []  # pManifoldMbar
 
-    def __init__(self):
+    def __init__(self, timeBetweenValveActions = 0.3):
 
-        self.timeBetweenValveActions = 0.2  ## Wenn zu schnell hintereinander gibt es Komminikationfehler
+        self.timeBetweenValveActions = timeBetweenValveActions  ## Wenn zu schnell hintereinander gibt es Komminikationfehler
         ## muss wohl schneller als messtakt sein....
 
         ##############################################################################

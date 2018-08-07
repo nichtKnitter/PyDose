@@ -7,7 +7,7 @@ from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-Statemachinelogger = logging.getLogger('transitions').setLevel(logging.CRITICAL)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
 
 
 ### Loggin in Console Stoppen
@@ -21,9 +21,21 @@ class robotStateMachine(object):
     # segTime = 0
     # tacktzeit = 0
 
-    MesskarteObj = Messkarte.Messkarte()
+    MesskarteObj = Messkarte.Messkarte(timeBetweenValveActions = 0.001)
 
     def __init__(self, activeOnStart=False):
+
+        # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
+        self.startAktTackt = time.time()
+        self.gereateTackt = 0.02
+        self.messtaktCont = 0.001
+
+        # Schnellmoegliche DAQ Befehl Sequenzen
+        self.DAQminimumTakt = 0.001
+        self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
+
+        ## minimum Aktivzeit für Ventile ~ 0.35 s
+        self.minimumValveOnTime = 0.5
 
         self.userCommandManual = 'NA'
         self.newUserCommand = False
@@ -31,12 +43,12 @@ class robotStateMachine(object):
         self.isRunning = activeOnStart
 
         # aktueller Solldruck
-        self.pSollMbar = 30
+        self.pSollMbar = 35
         # erlaubte regelabweichung
-        self.maxDeltaPAllowedMbar = 0.5
+        self.maxDeltaPAllowedMbar = 0.2
 
         # initialer Stellgrad de Proportionalventils
-        self.StellgradProzent = 50
+        self.StellgradProzent = 20
         self.lastStellgrad = self.StellgradProzent  # zum überprüfen og geschaltet werden muss
 
         # couter für die punkte die beim warten geprintet werden
@@ -47,17 +59,9 @@ class robotStateMachine(object):
         # startzeit des aktuellen Segmentes
         self.segTime = time.time()
 
-        # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
-        self.startAktTackt = time.time()
-        self.gereateTackt = 1
-        self.messtaktCont = 0.005
 
-        # Schnellmoegliche DAQ Befehl Sequenzen
-        self.DAQminimumTakt = 0.02
-        self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
-        ## minimum Aktivzeit für Ventile ~ 0.35 s
-        self.minimumValveOnTime = 0.5
+
 
         # Alle Kanaele auschalten
         self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu)
@@ -361,34 +365,41 @@ class robotStateMachine(object):
 
     def regeln_langsam(self):
 
-        print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.pSollMbar)
+        print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.pSollMbar, "\tself.aktuellerModus", self.aktuellerModus)
+        print(self.StellgradProzent)
         if self.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
-            print("Kein Ventil a")
+            # print("Kein Ventil a")
             ## wenn kleine als psoll und kommt aus modus alle zu, sonst mach alle zu
             if self.p2ProbeMbar < (self.pSollMbar - self.maxDeltaPAllowedMbar):
-                print("V_Dose_Fine: nach oben")
-                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
-                self.valveActivationTracker()
+                if self.aktuellerModus != "vStateSollDoseFine":
+                    print("V_Dose_Fine: nach oben")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
+                    self.valveActivationTracker()
 
-                self.StellgradProzent = 40
+                    self.StellgradProzent = 25
+                    print(self.StellgradProzent)
 
             elif self.p2ProbeMbar > (self.pSollMbar + self.maxDeltaPAllowedMbar):
-                print("V evac Fine: nach unten")
-                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
-                self.valveActivationTracker()
-                self.StellgradProzent = 40
+                if self.aktuellerModus != "vStateSollEvakFine":
+                    print("V evac Fine: nach unten")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
+                    self.valveActivationTracker()
+                    self.StellgradProzent = 35
+                    print(self.StellgradProzent)
 
             else:
                 if self.aktuellerModus != "vStateSollAlleZu":  # nur wenn er es nicht eh schon macht
                     print("Hold")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, False)
                     self.valveActivationTracker()
+                    print(self.StellgradProzent)
 
     def setPropStellgrad(self):
         if self.lastStellgrad != self.StellgradProzent:
             self.MesskarteObj.v_Prop_Stellgrad(self.StellgradProzent)
             self.lastStellgrad = self.StellgradProzent
-        self.lastDAQAction = time.time()
+            print(self.StellgradProzent)
+            self.lastDAQAction = time.time()
 
     def hasToShutOffValve(self):
         # Überprüft ob ein Ventil an ist und die festgelegt minimumaktivierungszeit vorbei ist

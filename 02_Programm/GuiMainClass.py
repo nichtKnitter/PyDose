@@ -10,10 +10,9 @@ import logging
 import AblaufStatemachine
 # import numpy as np
 import pyqtgraph as pyqtgraph
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 
-# from PyQt5.QtCore import pyqtSlot
-# from pyqtgraph.Qt.QtCore import pyqtSlot
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +88,8 @@ class Example(QtGui.QMainWindow):
         self.show()
 
     def initButtons(self):
+
+
 
         self.startBtn = QtGui.QPushButton('Start Control')
         self.startBtn.setToolTip('This is an example button')

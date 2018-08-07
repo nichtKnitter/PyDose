@@ -39,13 +39,14 @@ PID::SetOutputLimits(0, 255); //default output limit corresponds to
 
 class OsPID:
     def __init__(self, startInput, startOutput, Setpoint, Kp, Ki, Kd, ControllerDirection="DIRECT", inAuto=False):
-        self.inAuto = inAuto
+
+        self.isInAutomaticMode = inAuto
 
         self.controllerDirection = ControllerDirection
         if ControllerDirection == "DIRECT":
-            self.BoolControllerDirection = True
+            self.isDirectAndNotReverse = True
 
-        self.inAuto = inAuto
+        self.isInAutomaticMode = inAuto
 
         self.sampletime = 0.1  # default Controller Sample Time is 0.1 seconds
         self.now = time.time()
@@ -73,7 +74,7 @@ class OsPID:
         * pid Output needs to be computed
         **********************************************************************************/
         """
-        if self.inAuto is False:
+        if self.isInAutomaticMode is False:
             return
         now = time.time()
         timeChange = (now - self.lastTime)
@@ -150,7 +151,7 @@ class OsPID:
             return
         self.outMin = Min
         self.outMax = Max
-        if self.inAuto:
+        if self.isInAutomaticMode:
             if self.myOutput > self.outMax:
                 self.myOutput = self.outMax
             elif self.myOutput < self.outMin:
@@ -172,15 +173,17 @@ class OsPID:
         :return:
         """
         if newMode == "Automatic":
-            boolNewMode = True
+            isModeAutomatic = True
         else:
-            boolNewMode = False
+            isModeAutomatic = False
 
-        newAuto = (boolNewMode == True)
-        if newAuto != self.inAuto:
+        newAuto = (isModeAutomatic is
+
+            True)
+        if newAuto != self.isInAutomaticMode:
             # { /*we just went from manual to auto*/
             self.PIDinit()
-        self.inAuto = newAuto
+        self.isInAutomaticMode = newAuto
 
     def PIDinit(self):
         """
@@ -209,7 +212,7 @@ class OsPID:
             newBoolControllerDirection = True
         else:
             newBoolControllerDirection = False
-        if self.inAuto and newBoolControllerDirection != self.BoolControllerDirection:
+        if self.isInAutomaticMode and newBoolControllerDirection != self.isDirectAndNotReverse:
             self.Kp = 0 - self.Kp
             self.Ki = 0 - self.Ki
             self.Kd = 0 - self.Kd

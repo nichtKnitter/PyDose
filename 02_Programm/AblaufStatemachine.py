@@ -21,7 +21,7 @@ class robotStateMachine(object):
     # segTime = 0
     # tacktzeit = 0
 
-    MesskarteObj = Messkarte.Messkarte(timeBetweenValveActions=0.001, isDebugDummyMode=True)
+    MesskarteObj = Messkarte.Messkarte(timeBetweenValveActions=0.001, isDebugDummyMode=False)
 
     def __init__(self, activeOnStart=False):
 

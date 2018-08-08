@@ -10,10 +10,7 @@ import logging
 import AblaufStatemachine
 # import numpy as np
 import pyqtgraph as pyqtgraph
-from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
-
-
-
+from pyqtgraph.Qt import QtGui, QtCore
 
 logging.basicConfig(level=logging.INFO)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -67,23 +64,43 @@ class Example(QtGui.QMainWindow):
         self.setWindowTitle('Statusbar')
 
         # central widget
-        self.cw = QtGui.QWidget()  # central window?
-        self.setCentralWidget(self.cw)
-        self.l = QtGui.QVBoxLayout()
-        self.cw.setLayout(self.l)
+        self.centralWidget = QtGui.QWidget()  # central window?
+        self.setCentralWidget(self.centralWidget)
+        self.layout1 = QtGui.QVBoxLayout()
+        self.centralWidget.setLayout(self.layout1)
 
-        self.pw = pyqtgraph.PlotWidget(name='Plot1')  ## giving the plots names allows us to link their axes together
-        self.l.addWidget(self.pw)
+        horizontalGroupBoxButtons = QtGui.QGroupBox("Grid")
+        self.layoutControlButtons = QtGui.QGridLayout()
+        self.layoutControlButtons.setColumnStretch(2, 3)
+        self.layoutControlButtons.setRowStretch(1, 0)
+        # self.layout2.setColumnStretch(2, 20)
 
+        # self.layout2.addWidget(QtGui.QPushButton('1'), 0, 0)
+        # self.layout2.addWidget(QtGui.QPushButton('2'), 0, 1)
+        # self.layout2.addWidget(QtGui.QPushButton('3'), 0, 2)
+        # self.layout2.addWidget(QtGui.QPushButton('4'), 1, 0)
+        # self.layout2.addWidget(QtGui.QPushButton('5'), 1, 1)
+        # self.layout2.addWidget(QtGui.QPushButton('6'), 1, 2)
+        # self.layout2.addWidget(QtGui.QPushButton('7'), 2, 0)
+        # self.layout2.addWidget(QtGui.QPushButton('8'), 2, 1)
+        # self.layout2.addWidget(QtGui.QPushButton('9'), 2, 2)
+
+        horizontalGroupBoxButtons.setLayout(self.layoutControlButtons)
+
+        self.plotWindow = pyqtgraph.PlotWidget(
+            name='Plot1')  ## giving the plots names allows us to link their axes together
+        self.layout1.addWidget(self.plotWindow)
+
+        self.layout1.addWidget(horizontalGroupBoxButtons)
         self.initButtons()
 
         ## Create an empty plot curve to be filled later, set its pen
-        self.pw.addLegend()
-        self.p1 = self.pw.plot(name="Pressure Mainifold")
-        self.p2 = self.pw.plot(name="Pressure Sample")
+        self.plotWindow.addLegend()
+        self.p1 = self.plotWindow.plot(name="Pressure Mainifold")
+        self.p2 = self.plotWindow.plot(name="Pressure Sample")
 
-        self.pw.setLabel('left', 'Value', units='mbar')
-        self.pw.setLabel('bottom', 'Time', units='s')
+        self.plotWindow.setLabel('left', 'Value', units='mbar')
+        self.plotWindow.setLabel('bottom', 'Time', units='s')
 
         self.show()
 
@@ -93,72 +110,72 @@ class Example(QtGui.QMainWindow):
 
         self.startBtn = QtGui.QPushButton('Start Control')
         self.startBtn.setToolTip('This is an example button')
-        self.l.addWidget(self.startBtn)
+        self.layoutControlButtons.addWidget(self.startBtn)
         self.startBtn.clicked.connect(self.startDosing)
         self.startBtn.setCheckable(True)
 
         self.evacBtn = QtGui.QPushButton('evac Sample')
-        self.l.addWidget(self.evacBtn)
+        self.layoutControlButtons.addWidget(self.evacBtn)
         self.evacBtn.clicked.connect(self.evacSample)
 
         self.EvakFineBtn = QtGui.QPushButton('Evac Slow')
-        self.l.addWidget(self.EvakFineBtn)
+        self.layoutControlButtons.addWidget(self.EvakFineBtn)
         self.EvakFineBtn.clicked.connect(self.EvakFine)
 
         self.alleAufBtn = QtGui.QPushButton('All Valves Open')
-        self.l.addWidget(self.alleAufBtn)
+        self.layoutControlButtons.addWidget(self.alleAufBtn)
         self.alleAufBtn.clicked.connect(self.alleAuf)
 
         self.AlleZuBtn = QtGui.QPushButton('Close all Valves')
-        self.l.addWidget(self.AlleZuBtn)
+        self.layoutControlButtons.addWidget(self.AlleZuBtn)
         self.AlleZuBtn.clicked.connect(self.AlleZu)
 
         self.DegassEvaporatorBtn = QtGui.QPushButton('Degass Evaporator')
-        self.l.addWidget(self.DegassEvaporatorBtn)
+        self.layoutControlButtons.addWidget(self.DegassEvaporatorBtn)
         self.DegassEvaporatorBtn.clicked.connect(self.DegassEvaporator)
 
         self.V1Btn = QtGui.QPushButton('V1')
-        self.l.addWidget(self.V1Btn)
+        self.layoutControlButtons.addWidget(self.V1Btn)
         self.V1Btn.clicked.connect(self.V1)
         self.V1Btn.setCheckable(True)
 
         self.V2Btn = QtGui.QPushButton('V2')
-        self.l.addWidget(self.V2Btn)
+        self.layoutControlButtons.addWidget(self.V2Btn)
         self.V2Btn.clicked.connect(self.V2)
         self.V2Btn.setCheckable(True)
 
         self.V3Btn = QtGui.QPushButton('V3')
-        self.l.addWidget(self.V3Btn)
+        self.layoutControlButtons.addWidget(self.V3Btn)
         self.V3Btn.clicked.connect(self.V3)
         self.V3Btn.setCheckable(True)
 
         self.V4Btn = QtGui.QPushButton('V4')
-        self.l.addWidget(self.V4Btn)
+        self.layoutControlButtons.addWidget(self.V4Btn)
         self.V4Btn.clicked.connect(self.V4)
         self.V4Btn.setCheckable(True)
 
         self.V5Btn = QtGui.QPushButton('V5')
-        self.l.addWidget(self.V5Btn)
+        self.layoutControlButtons.addWidget(self.V5Btn)
         self.V5Btn.clicked.connect(self.V5)
         self.V5Btn.setCheckable(True)
 
         self.V6Btn = QtGui.QPushButton('V6')
-        self.l.addWidget(self.V6Btn)
+        self.layoutControlButtons.addWidget(self.V6Btn)
         self.V6Btn.clicked.connect(self.V6)
         self.V6Btn.setCheckable(True)
 
         self.V7Btn = QtGui.QPushButton('V7')
-        self.l.addWidget(self.V7Btn)
+        self.layoutControlButtons.addWidget(self.V7Btn)
         self.V7Btn.clicked.connect(self.V7)
         self.V7Btn.setCheckable(True)
 
         self.VPropBtn = QtGui.QPushButton('VProp On/Off')
-        self.l.addWidget(self.VPropBtn)
+        self.layoutControlButtons.addWidget(self.VPropBtn)
         self.VPropBtn.clicked.connect(self.VProp)
         self.VPropBtn.setCheckable(True)
 
         self.VPropStellgradBtn = QtGui.QPushButton('VProp Stellgrad')
-        self.l.addWidget(self.VPropStellgradBtn)
+        self.layoutControlButtons.addWidget(self.VPropStellgradBtn)
         # self.VPropStellgradBtn.clicked.connect(self.VPropStellgrad)
         self.VPropStellgradBtn.setCheckable(True)
 

@@ -1,6 +1,7 @@
 # Arbeitszeugniss
 
 + Einstellung von Reglern
++ Autoatiosieunrg von Auswertung und Modellierung der Messergebnisse 
 + Auschreibungen und Abnahmen
 + Modellierung thermodynamischer Prozesse, 
 Fitting, 
@@ -15,8 +16,15 @@ Fitting,
 + Vorträge und Konferenzteilnahme
 + Auswertesofteware für alle Geräte unterschiedlicher Hersteller
 + CAD Konstruktion von Sorptionsmodulen und Messaufbauten
- 
++ Kosten- und finanzrechungen, LCA Rechnungen, Kostenrechungen,  
++ NiDaqMx, Python, C.Apis, 
++ Messungen
++ Experte in Messungen, internationaler Spezialist Sorptionsmessungen
+
 
 ## Hobbies
 
 + Linux, Arduino, CCC, Programmierung / IT, 
+
+Einlesen von Messdateien unteschiedlichster HEsteller, Auswertung der Messsdaten nach allen relevanten Größen(Xrel, Psat, Xvol, prel)
+

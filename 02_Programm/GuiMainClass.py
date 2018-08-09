@@ -3,14 +3,18 @@
 Demonstrates use of PlotWidget class. This is little more than a
 GraphicsView with a PlotItem placed in its center.
 """
-
 # import time
 import logging
 
 import AblaufStatemachine
 # import numpy as np
 import pyqtgraph as pyqtgraph
+# import Ui_MainWindow as Ui_MainAuto
+from MyGui import Ui_MainWindow
 from pyqtgraph.Qt import QtGui, QtCore
+
+# from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 logging.basicConfig(level=logging.INFO)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -27,80 +31,79 @@ Guilogger.info('Completed configuring logger()!')
 # import Messkarte
 
 import sys
-from PyQt5.QtWidgets import QApplication
 
 
-class Example(QtGui.QMainWindow):
+class Example(QtGui.QMainWindow, Ui_MainWindow):
     localRobotStMachObj = AblaufStatemachine.robotStateMachine(
         activeOnStart=False)  # achtung! hier wird batman gleich wieder zerstört
 
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-        self.vState = self.localRobotStMachObj.getVState()
-        Guilogger.info("Init: VState  ")
+    def __init__(self, parent=None):
+        super(Example, self).__init__(parent)
+        self.setupUi(self)
 
-        self.t = QtCore.QTimer()
-        self.t.timeout.connect(self.updateData)
+        self.initUIafterAuto()
+        # self.vState = self.localRobotStMachObj.getVState()
+        # Guilogger.info("Init: VState  ")
+        #
+        # self.t = QtCore.QTimer()
+        # self.t.timeout.connect(self.updateData)
+        #
+        # self.timerStatemachine = QtCore.QTimer()
+        # self.timerStatemachine.timeout.connect(self.UpdateStateMachine)
+        #
+        # # Timer zum Update der Knöpfe
+        # self.buttonTimer = QtCore.QTimer()
+        # self.buttonTimer.timeout.connect(self.stateUpdate)
+        #
+        # Guilogger.debug("timer gestartet")
+        # self.t.start(16)  # in msec, 16 entsprechen 60 Hz
+        # ## Statemachinetimer muss deutlich schneller sein als der Geräte/Regeltakt, sonst wird Messen nicht ausgelöst
+        # self.timerStatemachine.start(1)  # in msec
+        # self.buttonTimer.start(100)  # in msec, 16 entsprechen 60 Hz
 
-        self.timerStatemachine = QtCore.QTimer()
-        self.timerStatemachine.timeout.connect(self.UpdateStateMachine)
-
-        # Timer zum Update der Knöpfe
-        self.buttonTimer = QtCore.QTimer()
-        self.buttonTimer.timeout.connect(self.stateUpdate)
-
-        Guilogger.debug("timer gestartet")
-        self.t.start(16)  # in msec, 16 entsprechen 60 Hz
-        ## Statemachinetimer muss deutlich schneller sein als der Geräte/Regeltakt, sonst wird Messen nicht ausgelöst
-        self.timerStatemachine.start(1)  # in msec
-        self.buttonTimer.start(100)  # in msec, 16 entsprechen 60 Hz
-
-    def initUI(self):
+    def initUIafterAuto(self):
         self.statusBar().showMessage('Ready')
+        print(self.centralwidget)
 
-        self.setGeometry(300, 300, 250, 150)
-        self.resize(1600, 800)
-        self.setWindowTitle('Statusbar')
+        # self.setGeometry(300, 300, 250, 150)
+        # self.resize(1600, 800)
+        # self.setWindowTitle('Statusbar')
 
         # central widget
-        self.centralWidget = QtGui.QWidget()  # central window?
-        self.setCentralWidget(self.centralWidget)
-        self.layout1 = QtGui.QVBoxLayout()
-        self.centralWidget.setLayout(self.layout1)
+        # self.centralWidget = QtGui.QWidget()  # central window?
+        # self.setCentralWidget(self.centralWidget)
+        # self.layout1 = QtGui.QVBoxLayout()
+        # self.centralWidget.setLayout(self.layout1)
 
-        horizontalGroupBoxButtons = QtGui.QGroupBox("Grid")
-        self.layoutControlButtons = QtGui.QGridLayout()
-        self.layoutControlButtons.setColumnStretch(2, 3)
-        self.layoutControlButtons.setRowStretch(1, 0)
-        # self.layout2.setColumnStretch(2, 20)
+        # Box for the control Buttons
+        # horizontalGroupBoxButtons = QtGui.QGroupBox("Grid")
+        # self.layoutControlButtons = QtGui.QGridLayout()
+        # self.layoutControlButtons.setColumnStretch(2, 3)    # Verstehe ich noch nicht ganz
+        # self.layoutControlButtons.setRowStretch(1, 0)       # Verstehe ich noch nicht ganz
 
-        # self.layout2.addWidget(QtGui.QPushButton('1'), 0, 0)
-        # self.layout2.addWidget(QtGui.QPushButton('2'), 0, 1)
-        # self.layout2.addWidget(QtGui.QPushButton('3'), 0, 2)
-        # self.layout2.addWidget(QtGui.QPushButton('4'), 1, 0)
-        # self.layout2.addWidget(QtGui.QPushButton('5'), 1, 1)
-        # self.layout2.addWidget(QtGui.QPushButton('6'), 1, 2)
-        # self.layout2.addWidget(QtGui.QPushButton('7'), 2, 0)
-        # self.layout2.addWidget(QtGui.QPushButton('8'), 2, 1)
-        # self.layout2.addWidget(QtGui.QPushButton('9'), 2, 2)
+        # Setpoint Texbox
+        # Create textbox
+        # horizontalGroupBoxSetpoint = QtGui.QGroupBox("Setpoint")
 
-        horizontalGroupBoxButtons.setLayout(self.layoutControlButtons)
+        # self.setpointbox = QtGui.QLineEdit(self)
+        # self.layout1.addWidget(self.setpointbox)
 
-        self.plotWindow = pyqtgraph.PlotWidget(
-            name='Plot1')  ## giving the plots names allows us to link their axes together
-        self.layout1.addWidget(self.plotWindow)
+        # horizontalGroupBoxButtons.setLayout(self.layoutControlButtons)
 
-        self.layout1.addWidget(horizontalGroupBoxButtons)
-        self.initButtons()
+        # self.graphicsViewForPlotWidget = pyqtgraph.PlotWidget(
+        #     name='Plot1')  ## giving the plots names allows us to link their axes together
+        # self.layout1.addWidget(self.graphicsViewForPlotWidget)
+
+        # self.layout1.addWidget(horizontalGroupBoxButtons)
+        # self.initButtons()
 
         ## Create an empty plot curve to be filled later, set its pen
-        self.plotWindow.addLegend()
-        self.p1 = self.plotWindow.plot(name="Pressure Mainifold")
-        self.p2 = self.plotWindow.plot(name="Pressure Sample")
-
-        self.plotWindow.setLabel('left', 'Value', units='mbar')
-        self.plotWindow.setLabel('bottom', 'Time', units='s')
+        # self.graphicsViewForPlotWidget.addLegend()
+        # self.p1 = self.graphicsViewForPlotWidget.plot(name="Pressure Mainifold")
+        # self.p2 = self.graphicsViewForPlotWidget.plot(name="Pressure Sample")
+        #
+        # self.graphicsViewForPlotWidget.setLabel('left', 'Value', units='mbar')
+        # self.graphicsViewForPlotWidget.setLabel('bottom', 'Time', units='s')
 
         self.show()
 
@@ -351,6 +354,21 @@ class Example(QtGui.QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Example()
-    sys.exit(app.exec_())
+    ### original oberfläche
+    # app = QApplication(sys.argv)
+    # ex = Example()
+    # sys.exit(app.exec_())
+
+    ### automatischer code aus MyGuiy.py
+    # app = QtWidgets.QApplication(sys.argv)
+    # MainWindow = QtWidgets.QMainWindow()
+    # ui = Ui_MainWindow()
+    # ui.setupUi(MainWindow)
+    # MainWindow.show()
+    # sys.exit(app.exec_())
+
+    ### Code aus Besipiel
+    app = QtGui.QApplication(sys.argv)  # A new instance of QApplication
+    form = Example()  # We set the form to be our ExampleApp (design)
+    # form.show()  # Show the form
+    app.exec_()  # and execute the app

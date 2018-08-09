@@ -48,8 +48,8 @@ class robotStateMachine(object):
         self.maxDeltaPAllowedMbar = 0.2
 
         # initialer Stellgrad de Proportionalventils
-        self.StellgradProzent = 20
-        self.lastStellgrad = self.StellgradProzent  # zum überprüfen og geschaltet werden muss
+        self.PropStellgradSollProzent = 0
+        self.lastStellgrad = self.PropStellgradSollProzent  # zum überprüfen og geschaltet werden muss
 
         # couter für die punkte die beim warten geprintet werden
         self.num = 0
@@ -244,12 +244,14 @@ class robotStateMachine(object):
 
     def setUserCommand(self, Befehl):
         print('new user command accepted')
+        # self.PropStellgradSollProzent = VPropPercentage
         self.userCommandManual = Befehl
         self.newUserCommand = True
         print(self.userCommandManual, self.newUserCommand)
 
     def doUserInput(self):
         print('doUserInput')
+
         self.vState = self.MesskarteObj.getVState()  # states vorsorgich mal aktualisieren
 
         if self.userCommandManual == 'evacSample':
@@ -331,12 +333,13 @@ class robotStateMachine(object):
 
         if self.userCommandManual == 'VPropStellgrad':
             print("Toggle VPropStellgrad")
-            if self.vState["V_Prop"]["stellgrad"] >= 50:
-                self.setPropStellgrad(0)
-                # self.MesskarteObj.v_Prop_Stellgrad(0)
-            else:
-                self.setPropStellgrad(100)
-                # self.MesskarteObj.v_Prop_Stellgrad(100)
+            print(self.PropStellgradSollProzent)
+
+            self.setPropStellgrad()
+            print("erfolgreich")
+            # self.MesskarteObj.v_Prop_Stellgrad(self.PropStellgradSollProzent)
+
+
         #
         # auf jedenfall wieder freigeben, egal was befohlen wurde
         self.newUserCommand = False
@@ -366,7 +369,7 @@ class robotStateMachine(object):
     def regeln_langsam(self):
 
         print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.pSollMbar, "\tself.aktuellerModus", self.aktuellerModus)
-        print(self.StellgradProzent)
+        print(self.PropStellgradSollProzent)
         if self.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
             # print("Kein Ventil a")
             ## wenn kleine als psoll und kommt aus modus alle zu, sonst mach alle zu
@@ -376,30 +379,32 @@ class robotStateMachine(object):
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
                     self.valveActivationTracker()
 
-                    self.StellgradProzent = 25
-                    print(self.StellgradProzent)
+                    self.PropStellgradSollProzent = 25
+                    print(self.PropStellgradSollProzent)
 
             elif self.p2ProbeMbar > (self.pSollMbar + self.maxDeltaPAllowedMbar):
                 if self.aktuellerModus != "vStateSollEvakFine":
                     print("V evac Fine: nach unten")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
                     self.valveActivationTracker()
-                    self.StellgradProzent = 35
-                    print(self.StellgradProzent)
+                    self.PropStellgradSollProzent = 35
+                    print(self.PropStellgradSollProzent)
 
             else:
                 if self.aktuellerModus != "vStateSollAlleZu":  # nur wenn er es nicht eh schon macht
                     print("Hold")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, False)
                     self.valveActivationTracker()
-                    print(self.StellgradProzent)
+                    print(self.PropStellgradSollProzent)
 
     def setPropStellgrad(self):
-        if self.lastStellgrad != self.StellgradProzent:
-            self.MesskarteObj.v_Prop_Stellgrad(self.StellgradProzent)
-            self.lastStellgrad = self.StellgradProzent
-            print(self.StellgradProzent)
-            self.lastDAQAction = time.time()
+        print("in setPropStellgrad")
+        # if self.lastStellgrad != self.PropStellgradSollProzent:
+        self.MesskarteObj.v_Prop_Stellgrad(self.PropStellgradSollProzent)
+        print("neuer stellgrad gesetzt")
+        self.lastStellgrad = self.PropStellgradSollProzent
+        print("PropSoll", self.PropStellgradSollProzent, "PropIst", self.lastStellgrad)
+        self.lastDAQAction = time.time()
 
     def hasToShutOffValve(self):
         # Überprüft ob ein Ventil an ist und die festgelegt minimumaktivierungszeit vorbei ist

@@ -296,7 +296,11 @@ class Messkarte(object):
 
         umax = 5  # V
         umin = 0  # V
-        usoll = ((umax - umin) / 100) * Prozent
+        if Prozent > 100:
+            Prozent = 100
+        if Prozent < 0:
+            Prozent = 0
+        usoll = (((umax - umin) + umin) / 100) * Prozent
         Ventiladresse = self._Ventiladressen("V_PropStellgrad")
         if self.isDebugDummyMode is True:
             self.v_state["V_Prop"]["stellgrad"] = Prozent

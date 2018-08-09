@@ -67,19 +67,13 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
 
         # self.setWindowTitle('Statusbar')
 
-
-
-        # Setpoint Texbox
-        # horizontalGroupBoxSetpoint = QtGui.QGroupBox("Setpoint")
-        # self.setpointbox = QtGui.QLineEdit(self)
-
         print(self.graphicsViewForPlotWidget)
-        # self.graphicsViewForPlotWidget = pyqtgraph.PlotWidget(
-        #     name='Plot1')  ## giving the plots names allows us to link their axes together
 
         self.connectButtons()
 
         ## Create an empty plot curve to be filled later, set its pen
+        # self.graphicsViewForPlotWidget = pyqtgraph.PlotWidget(
+        #     name='Plot1')  ## giving the plots names allows us to link their axes together
         self.graphicsViewForPlotWidget.addLegend()
         self.p1 = self.graphicsViewForPlotWidget.plot(name="Pressure Mainifold")
         self.p2 = self.graphicsViewForPlotWidget.plot(name="Pressure Sample")
@@ -90,77 +84,59 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         self.show()
 
     def connectButtons(self):
+        # TODO: Ventile und degass manifold, ....
 
-        # self.startBtn = QtGui.QPushButton('Start Control')
-        self.startBtn.setToolTip('This is an example button')
-        # self.layoutControlButtons.addWidget(self.startBtn)
-        self.startBtn.clicked.connect(self.startDosing)
-        self.startBtn.setCheckable(True)
-        #
-        # self.evacBtn = QtGui.QPushButton('evac Sample')
-        # self.layoutControlButtons.addWidget(self.evacBtn)
-        # self.evacBtn.clicked.connect(self.evacSample)
-        #
-        # self.EvakFineBtn = QtGui.QPushButton('Evac Slow')
-        # self.layoutControlButtons.addWidget(self.EvakFineBtn)
-        # self.EvakFineBtn.clicked.connect(self.EvakFine)
-        #
-        # self.alleAufBtn = QtGui.QPushButton('All Valves Open')
-        # self.layoutControlButtons.addWidget(self.alleAufBtn)
         # self.alleAufBtn.clicked.connect(self.alleAuf)
-        #
-        # self.AlleZuBtn = QtGui.QPushButton('Close all Valves')
-        # self.layoutControlButtons.addWidget(self.AlleZuBtn)
-        # self.AlleZuBtn.clicked.connect(self.AlleZu)
-        #
-        # self.DegassEvaporatorBtn = QtGui.QPushButton('Degass Evaporator')
-        # self.layoutControlButtons.addWidget(self.DegassEvaporatorBtn)
-        # self.DegassEvaporatorBtn.clicked.connect(self.DegassEvaporator)
-        #
-        # self.V1Btn = QtGui.QPushButton('V1')
-        # self.layoutControlButtons.addWidget(self.V1Btn)
-        # self.V1Btn.clicked.connect(self.V1)
-        # self.V1Btn.setCheckable(True)
-        #
-        # self.V2Btn = QtGui.QPushButton('V2')
-        # self.layoutControlButtons.addWidget(self.V2Btn)
-        # self.V2Btn.clicked.connect(self.V2)
-        # self.V2Btn.setCheckable(True)
-        #
-        # self.V3Btn = QtGui.QPushButton('V3')
-        # self.layoutControlButtons.addWidget(self.V3Btn)
-        # self.V3Btn.clicked.connect(self.V3)
-        # self.V3Btn.setCheckable(True)
-        #
-        # self.V4Btn = QtGui.QPushButton('V4')
-        # self.layoutControlButtons.addWidget(self.V4Btn)
-        # self.V4Btn.clicked.connect(self.V4)
-        # self.V4Btn.setCheckable(True)
-        #
-        # self.V5Btn = QtGui.QPushButton('V5')
-        # self.layoutControlButtons.addWidget(self.V5Btn)
-        # self.V5Btn.clicked.connect(self.V5)
-        # self.V5Btn.setCheckable(True)
-        #
-        # self.V6Btn = QtGui.QPushButton('V6')
-        # self.layoutControlButtons.addWidget(self.V6Btn)
-        # self.V6Btn.clicked.connect(self.V6)
-        # self.V6Btn.setCheckable(True)
-        #
-        # self.V7Btn = QtGui.QPushButton('V7')
-        # self.layoutControlButtons.addWidget(self.V7Btn)
-        # self.V7Btn.clicked.connect(self.V7)
-        # self.V7Btn.setCheckable(True)
-        #
-        # self.VPropBtn = QtGui.QPushButton('VProp On/Off')
-        # self.layoutControlButtons.addWidget(self.VPropBtn)
-        # self.VPropBtn.clicked.connect(self.VProp)
-        # self.VPropBtn.setCheckable(True)
-        #
+
         # self.VPropStellgradBtn = QtGui.QPushButton('VProp Stellgrad')
         # self.layoutControlButtons.addWidget(self.VPropStellgradBtn)
-        # # self.VPropStellgradBtn.clicked.connect(self.VPropStellgrad)
-        # self.VPropStellgradBtn.setCheckable(True)
+        self.VPropStellgradBtn.clicked.connect(self.VPropStellgrad)
+        self.VPropStellgradBtn.setCheckable(False)
+
+        self.setPressureSetpointBtn.clicked.connect(self.setPSampleSetpoint)
+        self.setPressureSetpointBtn.setCheckable(False)
+
+        self.startBtn.setToolTip('start automatic pressure control')
+        self.startBtn.clicked.connect(self.startDosing)
+        self.startBtn.setCheckable(True)
+
+        self.evacBtn.clicked.connect(self.evacSample)
+        self.evacBtn.setCheckable(True)
+
+        self.DegassEvaporatorBtn.clicked.connect(self.DegassEvaporator)
+        self.DegassEvaporatorBtn.setCheckable(True)
+
+        self.EvakFineBtn.clicked.connect(self.EvakFine)
+        self.EvakFineBtn.setCheckable(True)
+
+        self.AlleZuBtn.clicked.connect(self.AlleZu)
+        #
+
+        self.V1Btn.clicked.connect(self.V1)
+        self.V1Btn.setCheckable(True)
+        #
+        self.V2Btn.clicked.connect(self.V2)
+        self.V2Btn.setCheckable(True)
+        #
+        self.V3Btn.clicked.connect(self.V3)
+        self.V3Btn.setCheckable(True)
+        #
+        self.V4Btn.clicked.connect(self.V4)
+        self.V4Btn.setCheckable(True)
+        #
+        self.V5Btn.clicked.connect(self.V5)
+        self.V5Btn.setCheckable(True)
+        #
+        self.V6Btn.clicked.connect(self.V6)
+        self.V6Btn.setCheckable(True)
+        #
+        self.V7Btn.clicked.connect(self.V7)
+        self.V7Btn.setCheckable(True)
+        #
+        self.VPropBtn.clicked.connect(self.VProp)
+        self.VPropBtn.setCheckable(True)
+        #
+
 
     def stateUpdate(self):
 
@@ -178,51 +154,48 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         else:
             self.startBtn.setChecked(False)
         print('State Update now!!!!!')
+
+        if self.vState['V1']['state'] == 'zu':
+            self.V1Btn.setChecked(False)
+        else:
+            self.V1Btn.setChecked(True)
+
+        if self.vState['V2']['state'] == 'zu':
+            self.V2Btn.setChecked(False)
+        else:
+            self.V2Btn.setChecked(True)
+
+        if self.vState['V3']['state'] == 'zu':
+            self.V3Btn.setChecked(False)
+        else:
+            self.V3Btn.setChecked(True)
+
+        if self.vState['V4']['state'] == 'zu':
+            self.V4Btn.setChecked(False)
+        else:
+            self.V4Btn.setChecked(True)
+
+        if self.vState['V5']['state'] == 'zu':
+            self.V5Btn.setChecked(False)
+        else:
+            self.V5Btn.setChecked(True)
+
+        if self.vState['V6']['state'] == 'zu':
+            self.V6Btn.setChecked(False)
+        else:
+            self.V6Btn.setChecked(True)
+
+        if self.vState['V7']['state'] == 'zu':
+            self.V7Btn.setChecked(False)
+        else:
+            self.V7Btn.setChecked(True)
         #
-        # if self.vState['V1']['state'] == 'zu':
-        #     self.V1Btn.setChecked(False)
-        # else:
-        #     self.V1Btn.setChecked(True)
+        if self.vState["V_Prop"]["state"] == 'an':
+            self.VPropBtn.setChecked(True)
+        else:
+            self.VPropBtn.setChecked(False)
         #
-        # if self.vState['V2']['state'] == 'zu':
-        #     self.V2Btn.setChecked(False)
-        # else:
-        #     self.V2Btn.setChecked(True)
-        #
-        # if self.vState['V3']['state'] == 'zu':
-        #     self.V3Btn.setChecked(False)
-        # else:
-        #     self.V3Btn.setChecked(True)
-        #
-        # if self.vState['V4']['state'] == 'zu':
-        #     self.V4Btn.setChecked(False)
-        # else:
-        #     self.V4Btn.setChecked(True)
-        #
-        # if self.vState['V5']['state'] == 'zu':
-        #     self.V5Btn.setChecked(False)
-        # else:
-        #     self.V5Btn.setChecked(True)
-        #
-        # if self.vState['V6']['state'] == 'zu':
-        #     self.V6Btn.setChecked(False)
-        # else:
-        #     self.V6Btn.setChecked(True)
-        #
-        # if self.vState['V7']['state'] == 'zu':
-        #     self.V7Btn.setChecked(False)
-        # else:
-        #     self.V7Btn.setChecked(True)
-        #
-        # if self.vState["V_Prop"]["state"] == 'an':
-        #     self.VPropBtn.setChecked(True)
-        # else:
-        #     self.VPropBtn.setChecked(False)
-        #
-        # if self.vState["V_Prop"]["stellgrad"] >= 50:
-        #     self.VPropStellgradBtn.setChecked(True)
-        # else:
-        #     self.VPropStellgradBtn.setChecked(False)
+
 
     @QtCore.pyqtSlot()
     def startDosing(self):
@@ -309,8 +282,17 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def VPropStellgrad(self):
+        bla = self.vPropSpinBox.value()
+        print("neuer Soll Stellgrad", bla)
+        self.localRobotStMachObj.PropStellgradSollProzent = bla
         self.localRobotStMachObj.setUserCommand('VPropStellgrad')
         self.stateUpdate()
+
+    @QtCore.pyqtSlot()
+    def setPSampleSetpoint(self):
+        newSetpoint = self.PressureSetpointSpinBox.value()
+        self.localRobotStMachObj.setSolldruck(newSetpoint)
+
 
     def updateData(self):
         Guilogger.debug("updating Plotdata")

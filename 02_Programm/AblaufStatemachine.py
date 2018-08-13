@@ -68,17 +68,9 @@ class robotStateMachine(object):
         self.valveActivationTracker()
 
         self.vState = self.MesskarteObj.getVState()  # states vorsorgich mal aktualisieren
-        self.aktuellerModus = self.vState['State']['Name']
-
-
-        # self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
-        # self.anyValveOn = False  # verfolgt ob gerade ein Ventil an ist, zum uberpruefen ob man sie wieder ausschalten muss
-        # time.sleep(
-        #     0.1)  # hier noch haendisch, wird spaeter über states geprueft ob letztes Messkartenereigniss lange genug her
-
-        # Alle Ventile beim Starten zu:
-        # self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, shutOffAuto=True)
-
+        temp = self.MesskarteObj.getVState()
+        # print(temp)
+        self.aktuellerModus = temp['State']['Name']
 
         # Initialize the state machine
         self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
@@ -87,100 +79,32 @@ class robotStateMachine(object):
         self.messen()
 
     def _initTransitions(self):
-        self.machine.add_transition(  # regel 1
-            source='start_gereat',
-            dest='start_messung',
-            trigger='tock',
-            after=['printTransition']
-        )
-        self.machine.add_transition(  # regel 2
-            source='start_messung',
-            dest='start_cycle',
-            trigger='tock',
-            after=['printTransition']
-            # ,            conditions=[self.testTimeisUp]
-        )
-        self.machine.add_transition(  # regel 2
-            source='start_cycle',
-            dest='segmentpruefung',
-            trigger='tock',
-            after=['resetTacktTimer']
-        )
-        self.machine.add_transition(  # regel 3
-            source='segmentpruefung',
-            dest='messen',
-            trigger='tock',
-            after=['messen'],
-            conditions=['testLastDAQAction']
-        )
-        self.machine.add_transition(  # regel 3
-            source='messen',
-            dest='regelmoduspruefung',
-            trigger='tock'
-        )
-        self.machine.add_transition(  # regel 3
-            source='regelmoduspruefung',
-            dest='regeln_langsam',
-            trigger='tock',
-            after=['regeln_langsam'],
-            conditions=['testLastDAQAction']
-        )
-        self.machine.add_transition(  # regel 3
-            source='regeln_langsam',
-            dest='regelnLangsamPropventil',
-            trigger='tock',
-            after=['setPropStellgrad'],
-            conditions=['testLastDAQAction']
-        )
-        self.machine.add_transition(  # regel 3
-            source='regelnLangsamPropventil',
-            dest='warten',
-            trigger='tock'
-        )
+        self.machine.add_transition(source='start_gereat', dest='start_messung', trigger='tock')
+        self.machine.add_transition(source='start_messung', dest='start_cycle', trigger='tock')
+        self.machine.add_transition(source='start_cycle', dest='segmentpruefung', trigger='tock',
+                                    after=['resetTacktTimer'])
+        self.machine.add_transition(source='segmentpruefung', dest='messen', trigger='tock', after=['messen'],
+                                    conditions=['testLastDAQAction'])
+        self.machine.add_transition(source='messen', dest='regelmoduspruefung', trigger='tock')
+        self.machine.add_transition(source='regelmoduspruefung', dest='regeln_langsam', trigger='tock',
+                                    after=['regeln_langsam'], conditions=['testLastDAQAction'])
+        self.machine.add_transition(source='regeln_langsam', dest='regelnLangsamPropventil', trigger='tock',
+                                    after=['setPropStellgrad'], conditions=['testLastDAQAction'])
+        self.machine.add_transition(source='regelnLangsamPropventil', dest='warten', trigger='tock')
         ### aus Warten in Ventile Ausschalten und zurück
-        self.machine.add_transition(  # muss vor transition zu start cycle gemacht werden, damit das höhere Pr
-            source='warten',
-            dest='VentileAusschalten',
-            trigger='tock',
-            after=['shutOffValves'],
-            conditions=['hasToShutOffValve']
-        )
-        self.machine.add_transition(  # regel 3
-            source='VentileAusschalten',
-            dest='warten',
-            trigger='tock'
-        )
-        self.machine.add_transition(
-            trigger='tock',
-            source='warten',
-            dest='UserInput',
-            conditions=['testUserInput', 'testLastDAQAction'],
-            after='doUserInput'
-        )
-        self.machine.add_transition(
-            trigger='tock',
-            source='UserInput',
-            dest='warten'
-        )
-
-        self.machine.add_transition(  # hat hoehere Prio als messen?
-            source='warten',
-            dest='start_cycle',
-            trigger='tock',
-            conditions=['testRegelTacktTimer', 'checkIfMachineIsRunning']
-        )
-        self.machine.add_transition(
-            trigger='tock',
-            source='warten',
-            dest='messenCont',
-            conditions=['TestMesstaktOver', 'testLastDAQAction'],
-            after='messen'
-        )
-        self.machine.add_transition(
-            trigger='tock',
-            source='messenCont',
-            dest='warten'
-        )
+        # muss vor transition zu start cycle gemacht werden, damit das höhere Pr
+        self.machine.add_transition(source='warten', dest='VentileAusschalten', trigger='tock', after=['shutOffValves'],
+                                    conditions=['hasToShutOffValve'])
+        self.machine.add_transition(source='VentileAusschalten', dest='warten', trigger='tock')
+        self.machine.add_transition(trigger='tock', source='warten', dest='UserInput',
+                                    conditions=['testUserInput', 'testLastDAQAction'], after='doUserInput')
+        self.machine.add_transition(trigger='tock', source='UserInput', dest='warten')
+        # hat hoehere Prio als messen?
+        self.machine.add_transition(source='warten', dest='start_cycle', trigger='tock',
+                                    conditions=['testRegelTacktTimer', 'checkIfMachineIsRunning'])
+        self.machine.add_transition(trigger='tock', source='warten', dest='messenCont',
+                                    conditions=['TestMesstaktOver', 'testLastDAQAction'], after='messen')
+        self.machine.add_transition(trigger='tock', source='messenCont', dest='warten')
 
     def getVState(self):
         return self.MesskarteObj.getVState()
@@ -218,14 +142,15 @@ class robotStateMachine(object):
         return result
 
     def testLastDAQAction(self):
-        if time.time() - self.lastDAQAction > self.DAQminimumTakt:
+        if time.time() - self.MesskarteObj.lastDAQtime > self.DAQminimumTakt:
             result = True
         else:
             result = False
         return result
 
     def TestMesstaktOver(self):
-        if time.time() - self.lastMeasurement > self.messtaktCont:
+        print("TestMesstaktOver", time.time() - self.MesskarteObj.lastMeasurement, self.messtaktCont)
+        if time.time() - self.MesskarteObj.lastMeasurement > self.messtaktCont:
             ergebnis = True
         else:
             ergebnis = False
@@ -234,10 +159,6 @@ class robotStateMachine(object):
     def checkIfMachineIsRunning(self):
         # print(self.isRunning)
         return self.isRunning
-
-    def printTransition(self):
-        # print("state gewechselt zu:\t", self.state)
-        pass
 
     def testUserInput(self):
         return self.newUserCommand
@@ -349,20 +270,18 @@ class robotStateMachine(object):
         print("try tracking valves")
         self.lastDAQAction = time.time()
         self.lastValveActivation = time.time()
-        self.anyValveOn = True
+        # self.anyValveOn = True
+        print("valvetracker", self.MesskarteObj.anyValveOn)
         self.vState = self.MesskarteObj.getVState()
         self.aktuellerModus = self.vState['State']['Name']
 
     def messen(self):
         self.MesskarteObj.readSensors()
         self.lastDAQAction = time.time()
-        self.lastMeasurement = time.time()
+        self.lastMeasurement = self.MesskarteObj.lastMeasurement
         self.p1ManifoldMbar = self.MesskarteObj.getP1ManifoldMbar()
         self.p2ProbeMbar = self.MesskarteObj.getP2ProbeMbar()
-        # print('test', self.p1ProbeMbar, self.p2ManifoldMbar)
-        # print(self.MesskarteObj.getp2ManifoldArray())
-        # print(self.MesskarteObj.getp1ProbeArray())
-        # print(self.MesskarteObj.getTimearray())
+
 
 
 
@@ -370,7 +289,7 @@ class robotStateMachine(object):
 
         print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.pSollMbar, "\tself.aktuellerModus", self.aktuellerModus)
         print(self.PropStellgradSollProzent)
-        if self.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
+        if self.MesskarteObj.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
             # print("Kein Ventil a")
             ## wenn kleine als psoll und kommt aus modus alle zu, sonst mach alle zu
             if self.p2ProbeMbar < (self.pSollMbar - self.maxDeltaPAllowedMbar):
@@ -391,9 +310,9 @@ class robotStateMachine(object):
                     print(self.PropStellgradSollProzent)
 
             else:
-                if self.aktuellerModus != "vStateSollAlleZu":  # nur wenn er es nicht eh schon macht
+                if self.aktuellerModus != "vStateSollWait":  # nur wenn er es nicht eh schon macht
                     print("Hold")
-                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu, False)
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
                     self.valveActivationTracker()
                     print(self.PropStellgradSollProzent)
 
@@ -408,7 +327,12 @@ class robotStateMachine(object):
 
     def hasToShutOffValve(self):
         # Überprüft ob ein Ventil an ist und die festgelegt minimumaktivierungszeit vorbei ist
-        if self.anyValveOn is True and (time.time() - self.lastValveActivation) > self.minimumValveOnTime:
+        print("hasToShutOffValve")
+        print("self.MesskarteObj.anyValveOn", self.MesskarteObj.anyValveOn)
+        print("self.MesskarteObj.lastValveActivation", self.MesskarteObj.lastValveActivation)
+        print(" self.MesskarteObj.minimumValveOnTime", self.MesskarteObj.minimumValveOnTime)
+        if self.MesskarteObj.anyValveOn is True and (
+                time.time() - self.MesskarteObj.lastValveActivation) > self.MesskarteObj.minimumValveOnTime:
             result = True
         else:
             result = False
@@ -416,8 +340,8 @@ class robotStateMachine(object):
 
     def shutOffValves(self):
         self.MesskarteObj._alle_aus()
-        self.lastDAQAction = time.time()
-        self.anyValveOn = False
+        self.MesskarteObj.lastDAQtime = time.time()  # ist wohl redundant wenn es dort gesetzt wird.
+        # self.MesskarteObj.anyValveOn = False
 
 
 class globalRobot():

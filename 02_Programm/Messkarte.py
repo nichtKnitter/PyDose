@@ -16,6 +16,7 @@ class Messkarte(object):
 
     datenbufferlaenge = 10000  # ~80 mb, 1000 sind 8Mibi
     timeStartMessung = time.time()
+    # timearray = np.array()
     timearray = []
     p1ManifoldArray = []  # pProbeMbar
     p2ProbeArray = []  # pManifoldMbar
@@ -24,6 +25,9 @@ class Messkarte(object):
 
         self.isDebugDummyMode = isDebugDummyMode
 
+        self.lastStellgrad = 0  # zum überprüfen og geschaltet werden muss
+
+
         # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
         self.lastValveActivation = time.time()
         self.anyValveOn = False
@@ -31,6 +35,7 @@ class Messkarte(object):
         self.minimumValveOnTime = 0.4
         self.lastDAQtime = time.time()
         ## muss wohl schneller als messtakt sein....
+        self.lastMeasurement = time.time()
 
         ##############################################################################
         # logging optionen
@@ -60,8 +65,6 @@ class Messkarte(object):
         # States initialisiern:
         self.__initVentilStates()  # sollstates initialisieren
         self.v_state = self.vStateInit  # unbekannter ausgangszustand
-
-
 
     def __initVentilStates(self):
         # sollstates initialisieren
@@ -240,6 +243,7 @@ class Messkarte(object):
 
                     data = LeseTask.read()
                     self.lastDAQtime = time.time()
+                    self.lastMeasurement = time.time()
                     time.sleep(self.DAQwaitTime)
 
                     self.stuffAfterReadingSensors(data)
@@ -323,39 +327,41 @@ class Messkarte(object):
                         self.numberOfCommunicationErrors += 1
 
     def v_Prop_Stellgrad(self, Prozent):
+        if self.lastStellgrad != Prozent:
+            umax = 5  # V
+            umin = 0  # V
+            if Prozent > 100:
+                Prozent = 100
+            if Prozent < 0:
+                Prozent = 0
+            usoll = ((umax - umin) / 100) * Prozent
+            Ventiladresse = self._Ventiladressen("V_PropStellgrad")
+            if self.isDebugDummyMode is True:
+                self.v_state["V_Prop"]["stellgrad"] = Prozent
+                print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t', usoll)
+                self.lastDAQtime = time.time()
+                self.lastStellgrad = Prozent
 
-        umax = 5  # V
-        umin = 0  # V
-        if Prozent > 100:
-            Prozent = 100
-        if Prozent < 0:
-            Prozent = 0
-        usoll = ((umax - umin) / 100) * Prozent
-        Ventiladresse = self._Ventiladressen("V_PropStellgrad")
-        if self.isDebugDummyMode is True:
-            self.v_state["V_Prop"]["stellgrad"] = Prozent
-            print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t', usoll)
-            self.lastDAQtime = time.time()
-
-        if self.isDebugDummyMode is False:
-            with nidaqmx.Task() as VentilTask:
-                # VentilTask = nidaqmx.Task() #nur für debugzwecke
-                # print(Ventil_id, Befehl)
-                try:
-                    VentilTask.ao_channels.add_ao_voltage_chan(Ventiladresse, min_val=0,
-                                                               max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
-                    VentilTask.write(usoll)
-                    self.v_state["V_Prop"]["stellgrad"] = Prozent
-                    print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t',
-                          usoll)
-                    self.lastDAQtime = time.time()
-                    time.sleep(self.DAQwaitTime)
+            if self.isDebugDummyMode is False:
+                with nidaqmx.Task() as VentilTask:
+                    # VentilTask = nidaqmx.Task() #nur für debugzwecke
+                    # print(Ventil_id, Befehl)
+                    try:
+                        VentilTask.ao_channels.add_ao_voltage_chan(Ventiladresse, min_val=0,
+                                                                   max_val=5)  # task.ao_channels.add_ao_voltage_chan("Dev1/ao0")
+                        VentilTask.write(usoll)
+                        self.v_state["V_Prop"]["stellgrad"] = Prozent
+                        print("V_prop Stellgrad = \t", self.v_state["V_Prop"]["stellgrad"], "\tProzent", '\t\tUSoll:\t',
+                              usoll)
+                        self.lastDAQtime = time.time()
+                        self.lastStellgrad = Prozent
+                        time.sleep(self.DAQwaitTime)
 
 
-                except nidaqmx.DaqError as e:
-                    print(e)
-                    self.numberOfCommunicationErrors += 1
-        return self.v_state
+                    except nidaqmx.DaqError as e:
+                        print(e)
+                        self.numberOfCommunicationErrors += 1
+            return self.v_state
 
     def _alle_aus(self):
         # todo: umruesten auf iteration von v_state_in
@@ -387,6 +393,8 @@ class Messkarte(object):
                 self.v_state["V6"]["active"] = False
                 self.v_state["V7"]["active"] = False
 
+                self.anyValveOn = False
+
         except nidaqmx.DaqError as e:
             print(e)
             self.numberOfCommunicationErrors += 1
@@ -411,7 +419,7 @@ class Messkarte(object):
                     self.lastValveActivation = time.time()
                     self.lastDAQtime = time.time()
                     time.sleep(self.DAQwaitTime)
-
+                    self.anyValveOn = True
 
                     self.v_state[Ventil_name]["active"] = True
                     self.v_state[Ventil_name]["state"] = Befehl_in
@@ -452,6 +460,7 @@ class Messkarte(object):
                     print("in Ventil.task", self.v_state[Ventil_name])
                     time.sleep(self.DAQwaitTime)
                     self.lastDAQtime = time.time()
+                    self.anyValveOn = False
 
 
                 if self.isDebugDummyMode is True:
@@ -525,24 +534,23 @@ class Messkarte(object):
 
     def Ventile_schalten_ges(self, v_state_soll, shutOffAuto=True):
 
-
-        def befehluebersetzung(Befehl_in):
-            if (Befehl_in == "auf"):
-                Befehl = self.ventil_auf
-            if (Befehl_in == "zu"):
-                Befehl = self.Ventil_zu
-            if (Befehl_in == "aus"):
-                Befehl = self.Ventil_aus
-            return Befehl
-
-        with nidaqmx.Task() as VentilTask:
-             "V1"  'Dev1/port2/line0:1'
-            "V2"   'Dev1/port2/line2:3'
-            "V3" 'Dev1/port2/line4:5'
-            "V4"' 'Dev1/port1/line0:1'
-            "V5"  'Dev1/port1/line2:3'
-            "V6"  'Dev1/port1/line4:5'
-            "V7"  'Dev1/port1/line6:7'
+        # def befehluebersetzung(Befehl_in):
+        #     if (Befehl_in == "auf"):
+        #         Befehl = self.ventil_auf
+        #     if (Befehl_in == "zu"):
+        #         Befehl = self.Ventil_zu
+        #     if (Befehl_in == "aus"):
+        #         Befehl = self.Ventil_aus
+        #     return Befehl
+        #
+        # with nidaqmx.Task() as VentilTask:
+        #     "V4"  'Dev1/port1/line0:1'
+        #     "V5"  'Dev1/port1/line2:3'
+        #     "V6"  'Dev1/port1/line4:5'
+        #     "V7"  'Dev1/port1/line6:7'
+        #     "V1"  'Dev1/port2/line0:1'
+        #     "V2"  'Dev1/port2/line2:3'
+        #     "V3"  'Dev1/port2/line4:5'
 
             # adresse = list(self._Ventiladressen("V1"))
             # VentilTask.do_channels.add_do_chan(adresse, line_grouping=LineGrouping.CHAN_PER_LINE)

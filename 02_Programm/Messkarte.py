@@ -20,13 +20,15 @@ class Messkarte(object):
     timearray = []
     p1ManifoldArray = []  # pProbeMbar
     p2ProbeArray = []  # pManifoldMbar
+    pSollMbar = 35
+    setpointarray = []
 
     def __init__(self, DAQwaitTime=0.005, isDebugDummyMode=False):
 
         self.isDebugDummyMode = isDebugDummyMode
 
         self.lastStellgrad = 0  # zum überprüfen og geschaltet werden muss
-
+        self.setpoint = 0  # setpoint in mbar
 
         # Verfolgt wann die Ventile geschaltet wurden, um sie nach der richtigen Zeit wieder auszuschalten
         self.lastValveActivation = time.time()
@@ -203,6 +205,11 @@ class Messkarte(object):
     def getVState(self):
         return self.v_state
 
+    def getSetpoint(self):
+        return self.setpoint
+
+    def setSetpoint(self, newsetpoint):
+        self.setpoint = newsetpoint
     def getP1ManifoldMbar(self):
         return self.p1ManifoldMbar
 
@@ -275,11 +282,13 @@ class Messkarte(object):
         self.p1ManifoldArray.append(self.p1ManifoldMbar)
         self.p2ProbeArray.append(self.p2ProbeMbar)
         self.timearray.append(self.Messtime)
+        self.setpointarray.append(self.pSollMbar)
         # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
         if len(self.p1ManifoldArray) > self.datenbufferlaenge:
             self.p1ManifoldArray.pop(0)
             self.p2ProbeArray.pop(0)
             self.timearray.pop(0)
+            self.setpointarray.pop(0)
             self.Messkartenlogger.warning('Werte aus p arrays gepopt/entfernt!')
 
         # Strings zum loggen erstellen und dann mit Messkartenlogger loggen
@@ -288,10 +297,6 @@ class Messkarte(object):
         stringp2 = ("aktueller p2 array:\t" + str(self.p2ProbeArray))
         self.Messkartenlogger.info(stringp2)
         return data
-
-
-
-
 
     def vPropAnAus(self, Befehl_in="an"):
         Ventil_an = [True]
@@ -393,11 +398,17 @@ class Messkarte(object):
                 self.v_state["V6"]["active"] = False
                 self.v_state["V7"]["active"] = False
 
-                self.anyValveOn = False
+                self.anyValveOn = self.isAnyValveOn()
 
         except nidaqmx.DaqError as e:
             print(e)
             self.numberOfCommunicationErrors += 1
+
+    def isAnyValveOn(self):
+        if self.v_state["V1"]["active"] is False and self.v_state["V2"]["active"] is False and self.v_state["V3"][
+            "active"] is False and self.v_state["V4"]["active"] is False and self.v_state["V5"]["active"] == False and \
+                self.v_state["V6"]["active"] is False and self.v_state["V6"]["active"] is False:
+            return False
 
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):

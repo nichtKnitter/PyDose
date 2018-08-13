@@ -43,7 +43,7 @@ class robotStateMachine(object):
         self.isRunning = activeOnStart
 
         # aktueller Solldruck
-        self.pSollMbar = 35
+        self.MesskarteObj.setSetpoint(0)
         # erlaubte regelabweichung
         self.maxDeltaPAllowedMbar = 0.2
 
@@ -116,7 +116,8 @@ class robotStateMachine(object):
         self.isRunning = Befehl
 
     def setSolldruck(self, solldruck):
-        self.pSollMbar = solldruck
+        self.MesskarteObj.setSetpoint(solldruck)
+        # self.pSollMbar = solldruck
 
     def resetTacktTimer(self):
         self.startAktTackt = time.time()
@@ -287,12 +288,13 @@ class robotStateMachine(object):
 
     def regeln_langsam(self):
 
-        print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.pSollMbar, "\tself.aktuellerModus", self.aktuellerModus)
+        print("Regeln langsam:\tp1=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.MesskarteObj.getSetpoint(),
+              "\tself.aktuellerModus", self.aktuellerModus)
         print(self.PropStellgradSollProzent)
         if self.MesskarteObj.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
             # print("Kein Ventil a")
             ## wenn kleine als psoll und kommt aus modus alle zu, sonst mach alle zu
-            if self.p2ProbeMbar < (self.pSollMbar - self.maxDeltaPAllowedMbar):
+            if self.p2ProbeMbar < (self.MesskarteObj.getSetpoint() - self.maxDeltaPAllowedMbar):
                 if self.aktuellerModus != "vStateSollDoseFine":
                     print("V_Dose_Fine: nach oben")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
@@ -301,7 +303,7 @@ class robotStateMachine(object):
                     self.PropStellgradSollProzent = 25
                     print(self.PropStellgradSollProzent)
 
-            elif self.p2ProbeMbar > (self.pSollMbar + self.maxDeltaPAllowedMbar):
+            elif self.p2ProbeMbar > (self.MesskarteObj.getSetpoint() + self.maxDeltaPAllowedMbar):
                 if self.aktuellerModus != "vStateSollEvakFine":
                     print("V evac Fine: nach unten")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)

@@ -59,7 +59,7 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         self.t.start(16)  # in msec, 16 entsprechen 60 Hz
         # ## Statemachinetimer muss deutlich schneller sein als der Geräte/Regeltakt, sonst wird Messen nicht ausgelöst
         self.timerStatemachine.start(1)  # in msec
-        self.buttonTimer.start(100)  # in msec, 16 entsprechen 60 Hz
+        self.buttonTimer.start(16)  # in msec, 16 entsprechen 60 Hz
 
     def initUIafterAuto(self):
         self.statusBar().showMessage('Ready')
@@ -77,9 +77,13 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         self.graphicsViewForPlotWidget.addLegend()
         self.p1 = self.graphicsViewForPlotWidget.plot(name="Pressure Mainifold")
         self.p2 = self.graphicsViewForPlotWidget.plot(name="Pressure Sample")
+        self.p3 = self.graphicsViewForPlotWidget.plot(name="Setpoint")
         #
         self.graphicsViewForPlotWidget.setLabel('left', 'Value', units='mbar')
         self.graphicsViewForPlotWidget.setLabel('bottom', 'Time', units='s')
+
+        # self.graphicsViewForPlotWidget.plot(yRange=[0, 100], maxRange=[0, 120])
+        # .setLimits(xRange=[-100, 100], minRange=[0.1, None])
 
         self.show()
 
@@ -291,7 +295,8 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def setPSampleSetpoint(self):
         newSetpoint = self.PressureSetpointSpinBox.value()
-        self.localRobotStMachObj.setSolldruck(newSetpoint)
+        self.localRobotStMachObj.MesskarteObj.setSetpoint(newSetpoint)
+        # setSolldruck(newSetpoint)
 
 
     def updateData(self):
@@ -302,8 +307,12 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         Guilogger.debug(str(self.p2array))
         self.timearray = self.localRobotStMachObj.MesskarteObj.getTimearray()
         Guilogger.debug(str(self.timearray))
+
+        setpointarray = self.localRobotStMachObj.MesskarteObj.setpointarray
         self.p1.setData(x=self.timearray, y=self.p1array, pen=pyqtgraph.mkPen('b', width=1))
         self.p2.setData(x=self.timearray, y=self.p2array, pen=pyqtgraph.mkPen('r', width=1))
+        self.p3.setData(x=self.timearray, y=setpointarray, pen=pyqtgraph.mkPen('g', width=1))
+
         # Guilogger.info('Plot geupdatet')
 
         self.maxPressure1 = max(self.p1array)

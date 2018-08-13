@@ -1,5 +1,25 @@
 # Todo:
 
+
+
+überall "Regeln" gegen "Ctrl" austauschen
+
+regelmodi in eigene klasse mit statemachine auslagern,
+
+statetransitions werden pro modi ueberschrieben, bzw jeder sate bekommt sein 
+eigene präfix pro regelmodi
+
+states= [regLangsUp, regLangsDown, regLangswait1,
+
+regVolWait, regVolDoseUp, ...]
+
+bla.addtransition( source= regLangsUp, dest=regLangswait1, 
+conditions=regLangsUpToWait, after=regLangsWriteAlleZu,
+
+formCtrlContToCtrlVol, vonCtrlVolToCtrlCont)
+
+
+
 ## sonstiges
 + gitlab
 + -- warte auf email code

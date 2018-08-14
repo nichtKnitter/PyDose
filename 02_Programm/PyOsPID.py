@@ -65,11 +65,12 @@ class OsPI():
         self.minOutput = -100 # -100 - 100 %
         self.maxOutput = 100 # -100 - 100 %
 
+        self.wayUp = True
 
-    def setSetpoint(self):
-        pass
+    def setSetpoint(self, newSetpoint):
+        self.setpoint = newSetpoint
 
-    def computePI(self, Input), isNoOverschoot=True:
+    def computePI(self, Input, isNoOverschoot=True):
         """
         :param Input: Current Measuring
         :return: new Output between min an max
@@ -94,6 +95,11 @@ class OsPI():
         now = time.time()
         deltaT = (now - self.lastTime)
         if deltaT >= self.sampletime:
+
+            # saving values
+            self.lastError = self.error
+            self.lastOutput = self.currentOutput
+
             #compute Error
             self.error = self.setpoint - Input
             # PI Algorithm
@@ -111,25 +117,26 @@ class OsPI():
             if currentOutputlLocal < self.minOutput:
                 currentOutputlLocal = self.minOutput
 
-            #saving values
-            self.lastError = self.error
-            self.lastOutput = self.currentOutput
+
 
             # new output, ganz am ende:
             self.currentOutput = currentOutputlLocal
 
 
             def restetPi(self):
-                setprop(0)
-                state warten , shutoffprop
+                # setprop(0)
+                # state warten , shutoffprop
+                pass
 
             if isNoOverschoot is True:
                 if self.wayUp is True:
-                    if Input > Setpoint is True:
-                        restetPi()
-                if self.wayUp = False:
-                    if Input < Setpoint is True:
-                        resetPI()
+                    if Input > self.setpoint is True:
+                        # restetPi()
+                        pass
+                if self.wayUp is False:
+                    if Input < self.setpoint is True:
+                        # resetPI()
+                        pass
 
                 pass
 
@@ -163,20 +170,7 @@ class OsPI():
             self.Ki = 0 - Ti
         return self.Kc, self.Ti
 
-df = OsPI(20, 0, 20, 0.4, 300, True)
-time.sleep(1)
-print(df.computePI(12.1))
-time.sleep(1)
-print(df.computePI(12.2))
-time.sleep(1)
-print(df.computePI(12.5))
-time.sleep(1)
-print(df.computePI(12.11))
-time.sleep(1)
 
-print(df.computePI(12.20)
-time.sleep(1)
-print(df.computePI(12.3))
 
 
     # def setSampleTime(self, NewSampleTimeInSec):
@@ -249,6 +243,11 @@ class OsPID:
 
             # Alternative velocity PID:
             # output = lastOutput + Kp*(error - lastError) + Ki * error
+
+            # position
+            # PID: u(t) = K_p * e(t) + K_i * T_s * [e(0) + e(1) + ... e(t)] + u(0)
+            # velocity
+            # PID: u(t) = u(t - 1) + K_p * (e(t) - e(t - 1)) + K_i * T_s * e(t)
 
             if output > self.outMax:
                 output = self.outMax
@@ -369,3 +368,20 @@ class OsPID:
             self.Kp = 0 - self.Kp
             self.Ki = 0 - self.Ki
             self.Kd = 0 - self.Kd
+
+
+if __name__ == '__main__':
+    df = OsPI(20, 0, 20, 0.4, 300, True)
+    time.sleep(1)
+    print(df.computePI(12.1))
+    time.sleep(1)
+    print(df.computePI(12.2))
+    time.sleep(1)
+    print(df.computePI(12.5))
+    time.sleep(1)
+    print(df.computePI(12.11))
+    time.sleep(1)
+
+    print(df.computePI(12.20))
+    time.sleep(1)
+    print(df.computePI(12.3))

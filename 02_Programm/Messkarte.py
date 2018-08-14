@@ -340,6 +340,10 @@ class Messkarte(object):
             if Prozent < 0:
                 Prozent = 0
             usoll = ((umax - umin) / 100) * Prozent
+
+            if usoll > umax: usoll = umax
+            if usoll < umin: umin = umin
+
             Ventiladresse = self._Ventiladressen("V_PropStellgrad")
             if self.isDebugDummyMode is True:
                 self.v_state["V_Prop"]["stellgrad"] = Prozent
@@ -471,7 +475,7 @@ class Messkarte(object):
                     print("in Ventil.task", self.v_state[Ventil_name])
                     time.sleep(self.DAQwaitTime)
                     self.lastDAQtime = time.time()
-                    self.anyValveOn = False
+                    self.anyValveOn = self.isAnyValveOn()
 
 
                 if self.isDebugDummyMode is True:
@@ -577,24 +581,30 @@ class Messkarte(object):
             #
             # VentilTask.write(befehl)  #
 
-
-        self.vPropAnAus(v_state_soll["V_Prop"]["state"])
-        self.Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], False)
-        self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
-        self.Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], False)
-        self.Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], False)
-        self.Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], False)
-        self.Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], False)
-        self.Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
-        if self.v_state["V1"]["state"] == v_state_soll["V1"]["state"] and self.v_state["V2"]["state"] == v_state_soll["V2"]["state"] and self.v_state["V3"]["state"] == v_state_soll["V3"]["state"] and self.v_state["V4"]["state"] == v_state_soll["V4"]["state"] and self.v_state["V5"]["state"] == v_state_soll["V5"]["state"] and self.v_state["V6"]["state"] == v_state_soll["V6"]["state"] and self.v_state["V7"]["state"] == v_state_soll["V7"]["state"] and v_state_soll["V_Prop"]["state"] == self.v_state["V_Prop"]["state"]:
-            self.v_state["State"]["Name"] = v_state_soll["State"]["Name"]
-            print("state gewechselt zu:", self.v_state["State"]["Name"])
-        else:
-            print("konnte state nicht von ", self.v_state["State"]["Name"], "\tzu\t" ,v_state_soll["State"]["Name"], "\twechseln")
-        if shutOffAuto == True:
-            ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
-            time.sleep(0.5)
-            self._alle_aus()
+        if self.anyValveOn is False:  # nur schalten wenn nichts aktiv
+            self.vPropAnAus(v_state_soll["V_Prop"]["state"])
+            self.Ventil_schalten_einzeln("V1", v_state_soll["V1"]["state"], False)
+            self.Ventil_schalten_einzeln("V6", v_state_soll["V6"]["state"], False)
+            self.Ventil_schalten_einzeln("V4", v_state_soll["V4"]["state"], False)
+            self.Ventil_schalten_einzeln("V5", v_state_soll["V5"]["state"], False)
+            self.Ventil_schalten_einzeln("V3", v_state_soll["V3"]["state"], False)
+            self.Ventil_schalten_einzeln("V2", v_state_soll["V2"]["state"], False)
+            self.Ventil_schalten_einzeln("V7", v_state_soll["V7"]["state"], False)
+            if self.v_state["V1"]["state"] == v_state_soll["V1"]["state"] and self.v_state["V2"]["state"] == \
+                    v_state_soll["V2"]["state"] and self.v_state["V3"]["state"] == v_state_soll["V3"]["state"] and \
+                    self.v_state["V4"]["state"] == v_state_soll["V4"]["state"] and self.v_state["V5"]["state"] == \
+                    v_state_soll["V5"]["state"] and self.v_state["V6"]["state"] == v_state_soll["V6"]["state"] and \
+                    self.v_state["V7"]["state"] == v_state_soll["V7"]["state"] and v_state_soll["V_Prop"]["state"] == \
+                    self.v_state["V_Prop"]["state"]:
+                self.v_state["State"]["Name"] = v_state_soll["State"]["Name"]
+                print("state gewechselt zu:", self.v_state["State"]["Name"])
+            else:
+                print("konnte state nicht von ", self.v_state["State"]["Name"], "\tzu\t", v_state_soll["State"]["Name"],
+                      "\twechseln")
+            if shutOffAuto == True:
+                ## TODO: hier nur warten, wenn eines der Magnetvetile geschaltet hat
+                time.sleep(0.5)
+                self._alle_aus()
 
 if __name__ == '__main__':
     V = Messkarte()

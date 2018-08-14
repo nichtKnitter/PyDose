@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="newPrefix">
+        <file>image.png</file>
+        <file>Layout_combined_compressed-680px.png</file>
+    </qresource>
+</RCC>

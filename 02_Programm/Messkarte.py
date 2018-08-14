@@ -20,7 +20,6 @@ class Messkarte(object):
     timearray = []
     p1ManifoldArray = []  # pProbeMbar
     p2ProbeArray = []  # pManifoldMbar
-    pSollMbar = 35
     setpointarray = []
 
     def __init__(self, DAQwaitTime=0.005, isDebugDummyMode=False):
@@ -274,7 +273,8 @@ class Messkarte(object):
         self.Messtime = time.time() - self.timeStartMessung
 
         # In logger anzeigen
-        stringp = ("p1ManifoldMbar = " + str(self.p1ManifoldMbar) + ";\tp2ProbeMbar = " + str(self.p2ProbeMbar))
+        stringp = ("p1ManifoldMbar = " + str(self.p1ManifoldMbar) + ";\tp2ProbeMbar = " + str(
+            self.p2ProbeMbar) + "\tSetpoint:" + str(self.setpoint))
         self.Messkartenlogger.info(stringp)
 
         # daten in arrays abspeichern, mit fester Pufferlaenge
@@ -282,7 +282,7 @@ class Messkarte(object):
         self.p1ManifoldArray.append(self.p1ManifoldMbar)
         self.p2ProbeArray.append(self.p2ProbeMbar)
         self.timearray.append(self.Messtime)
-        self.setpointarray.append(self.pSollMbar)
+        self.setpointarray.append(self.setpoint)
         # buffer auf bestimmter größe halten. gibt anzahl gespeicherter Datenpunkte vor.
         if len(self.p1ManifoldArray) > self.datenbufferlaenge:
             self.p1ManifoldArray.pop(0)

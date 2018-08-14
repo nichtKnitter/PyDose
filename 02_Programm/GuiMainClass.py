@@ -85,6 +85,9 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         # self.graphicsViewForPlotWidget.plot(yRange=[0, 100], maxRange=[0, 120])
         # .setLimits(xRange=[-100, 100], minRange=[0.1, None])
 
+        self.PressureSetpointSpinBox.setValue(self.localRobotStMachObj.MesskarteObj.getSetpoint())
+
+
         self.show()
 
     def connectButtons(self):

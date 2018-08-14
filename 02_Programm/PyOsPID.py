@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 # Port of the OS-PID Library to Python by Max Baumgartner, baumax@posteo.de
 # Original header File:
@@ -37,10 +38,162 @@ PID::SetOutputLimits(0, 255); //default output limit corresponds to
 """
 
 
+class OsPI():
+    """
+    Eigener differentieller PI Regler
+    regelt Ableitung Ouputsignal nach Ableitung von Stellgröße
+    Stabiler als PID Regler bei rauschen, Überschwinger sind vermeidbar.
+
+    """
+    def __init__(self, startInput, startOutput, Setpoint, Kp, Ti, isRunning=False, isNotReverseAction = True):
+        self.isInAutomaticMode = isRunning
+        self.setMode(isRunning)
+        self.sampletime = 1
+
+        self.setpoint = Setpoint
+        self.isNewSetpoint = False
+        self.controllerDirection = isNotReverseAction
+        self.SetTunings(Kp, Ti)
+        self.currentOutput = startOutput
+        self.lastOutput = startOutput
+        self.lastTime = time.time()
+
+        self.error = 0
+        self.lastError = 0
+
+        # set output limits here
+        self.minOutput = -100 # -100 - 100 %
+        self.maxOutput = 100 # -100 - 100 %
+
+
+    def setSetpoint(self):
+        pass
+
+    def computePI(self, Input), isNoOverschoot=True:
+        """
+        :param Input: Current Measuring
+        :return: new Output between min an max
+
+         Velocity (Discrete) Controller Form
+         delta CO = Kp * (1+T / Ti) * e_i-1
+
+         Where:
+        CO = controller output signal (the wire out)
+        e(t) = current controller error, defined as SP – PV
+        SP = set point
+        Kc = proportional gain, a tuning parameter
+        Ki = integral gain, a tuning parameter
+        ei is the current controller error,
+        ei-1 is the controller error at the previous
+        sample time, T,
+        T = ∆t
+        ∆ei = ei – ei-1
+        """
+        if self.isInAutomaticMode is False:
+            return
+        now = time.time()
+        deltaT = (now - self.lastTime)
+        if deltaT >= self.sampletime:
+            #compute Error
+            self.error = self.setpoint - Input
+            # PI Algorithm
+            #          Velocity (Discrete) Controller Form
+            #          delta CO = Kc * (1+T / Ti) * e_i-1
+
+            # deltaCO = self.Kp * (1+deltaT/self.Ti) * self.lastError
+            deltaCO = self.Kc * (1 + self.sampletime / self.Ti) * self.lastError
+
+            currentOutputlLocal = self.lastOutput + deltaCO
+
+            # check for max output values
+            if currentOutputlLocal > self.maxOutput:
+                currentOutputlLocal = self.maxOutput
+            if currentOutputlLocal < self.minOutput:
+                currentOutputlLocal = self.minOutput
+
+            #saving values
+            self.lastError = self.error
+            self.lastOutput = self.currentOutput
+
+            # new output, ganz am ende:
+            self.currentOutput = currentOutputlLocal
+
+
+            def restetPi(self):
+                setprop(0)
+                state warten , shutoffprop
+
+            if isNoOverschoot is True:
+                if self.wayUp is True:
+                    if Input > Setpoint is True:
+                        restetPi()
+                if self.wayUp = False:
+                    if Input < Setpoint is True:
+                        resetPI()
+
+                pass
+
+
+            # print("setpoint", self.setpoint, "input", Input)
+            # print("error ", self.error)
+            return self.currentOutput
+
+    def setMode(self, isRunning=True):
+        """
+        /* SetMode(...)****************************************************************
+        * Allows the controller Mode to be set to manual (0) or Automatic (non-zero)
+        * when the transition from manual to auto occurs, the controller is
+        * automatically initialized
+        ******************************************************************************/
+        :param Mode:
+        :return:
+        """
+        if isRunning != self.isInAutomaticMode:
+            # { /*we just went from manual to auto*/
+            self.isInAutomaticMode = isRunning
+
+
+    def SetTunings(self, Kc, Ti):
+        if Kc < 0 or Ti < 0:
+            return
+        self.Kc = Kc
+        self.Ti = Ti * self.sampletime
+        if self.controllerDirection is not True:
+            self.Kc = 0 - Kc
+            self.Ki = 0 - Ti
+        return self.Kc, self.Ti
+
+df = OsPI(20, 0, 20, 0.4, 300, True)
+time.sleep(1)
+print(df.computePI(12.1))
+time.sleep(1)
+print(df.computePI(12.2))
+time.sleep(1)
+print(df.computePI(12.5))
+time.sleep(1)
+print(df.computePI(12.11))
+time.sleep(1)
+
+print(df.computePI(12.20)
+time.sleep(1)
+print(df.computePI(12.3))
+
+
+    # def setSampleTime(self, NewSampleTimeInSec):
+    #     """
+    #     /* SetSampleTime(...) *********************************************************
+    #     * sets the period, in seconds, at which the calculation is performed
+    #     ******************************************************************************/
+    #     """
+    #     if (NewSampleTimeInSec > 0):
+    #         ratio = NewSampleTimeInSec / self.sampletime
+    #         self.Ki *= ratio
+    #         self.sampletime = NewSampleTimeInSec
+
+
 class OsPID:
     def __init__(self, startInput, startOutput, Setpoint, Kp, Ki, Kd, ControllerDirection="DIRECT", inAuto=False):
 
-        self.isInAutomaticMode = inAuto
 
         self.controllerDirection = ControllerDirection
         if ControllerDirection == "DIRECT":
@@ -132,7 +285,7 @@ class OsPID:
             self.Kd /= ratio
             self.sampletime = NewSampleTime
 
-    def setOutputLimits(self, Min=0, Max=100):
+    def setOutputLimits(self, Min=-100, Max=100):
         """
          /* SetOutputLimits(...)****************************************************
         * This function will be used far more often than SetInputLimits. while

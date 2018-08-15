@@ -78,6 +78,8 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         self.p1 = self.graphicsViewForPlotWidget.plot(name="Pressure Mainifold")
         self.p2 = self.graphicsViewForPlotWidget.plot(name="Pressure Sample")
         self.p3 = self.graphicsViewForPlotWidget.plot(name="Setpoint")
+        self.graphicsViewForPlotWidget.setRange(yRange=[0, 100], padding=0.01)
+        self.graphicsViewForPlotWidget.setDownsampling(ds=5, auto=False, mode='mean')
         #
         self.graphicsViewForPlotWidget.setLabel('left', 'Value', units='mbar')
         self.graphicsViewForPlotWidget.setLabel('bottom', 'Time', units='s')
@@ -153,14 +155,35 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         Guilogger.debug(str(self.localRobotStMachObj.getIsRunning()))
 
         message = "Automatic Control: " + str(self.localRobotStMachObj.getIsRunning()) + "\t\t\tActual Mode: " + \
-                  self.vState['State']['Name']
-        print(message)
+                  self.vState['State']['Name'] + "\t\t\tStellgrad: " + str(
+            self.localRobotStMachObj.MesskarteObj.lastStellgrad)
+        # print(message)
         self.statusBar().showMessage(message)
         if self.localRobotStMachObj.getIsRunning() is True:
             self.startBtn.setChecked(True)
         else:
             self.startBtn.setChecked(False)
-        print('State Update now!!!!!')
+        # print('State Update now!!!!!')
+
+        if self.vState["State"]["Name"] == "vStateSollProbeEvakGrob":
+            self.evacBtn.setChecked(True)
+        else:
+            self.evacBtn.setChecked(False)
+
+        if self.vState["State"]["Name"] == "vStateSollDegassEvaporator":
+            self.DegassEvaporatorBtn.setChecked(True)
+        else:
+            self.DegassEvaporatorBtn.setChecked(False)
+
+        if self.vState["State"]["Name"] == "vStateSollEvakFine":
+            self.EvakFineBtn.setChecked(True)
+        else:
+            self.EvakFineBtn.setChecked(False)
+
+        if self.vState["State"]["Name"] == "vStateSollAlleZu":
+            self.AlleZuBtn.setChecked(True)
+        else:
+            self.AlleZuBtn.setChecked(False)
 
         if self.vState['V1']['state'] == 'zu':
             self.V1Btn.setChecked(False)
@@ -325,7 +348,6 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         # Guilogger.debug('trying to update machine')
         self.localRobotStMachObj.tock()
 
-    ## Start a timer to rapidly update the plot in pw
 
 
 if __name__ == '__main__':

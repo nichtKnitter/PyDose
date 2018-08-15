@@ -8,7 +8,7 @@ from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-Statemachinelogger = logging.getLogger('transitions').setLevel(logging.INFO)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.CRITICAL)
 
 
 ### Loggin in Console Stoppen
@@ -32,8 +32,8 @@ class robotStateMachine(object):
         self.messtaktCont = 0.001
 
         # Schnellmoegliche DAQ Befehl Sequenzen
-        self.DAQminimumTakt = 0.001
-        self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
+        self.DAQminimumTakt = 0.0005
+        # self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
         ## minimum Aktivzeit für Ventile ~ 0.35 s
         self.minimumValveOnTime = 0.5
@@ -46,7 +46,7 @@ class robotStateMachine(object):
         # aktueller Solldruck
         self.MesskarteObj.setSetpoint(0)
         # erlaubte regelabweichung
-        self.maxDeltaPAllowedMbar = 0.2
+        self.maxDeltaPAllowedMbar = 0.1
 
         # initialer Stellgrad de Proportionalventils
         self.PropStellgradSollProzent = 0
@@ -61,17 +61,13 @@ class robotStateMachine(object):
         self.segTime = time.time()
 
 
-
-
-
         # Alle Kanaele auschalten
-        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollAlleZu)
+        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait)
         self.valveActivationTracker()
 
-        self.vState = self.MesskarteObj.getVState()  # states vorsorgich mal aktualisieren
-        temp = self.MesskarteObj.getVState()
-        # print(temp)
-        self.aktuellerModus = temp['State']['Name']
+        # states vorsorgich mal aktualisieren
+        self.vState = self.MesskarteObj.getVState()
+        self.aktuellerModus = self.vState['State']['Name']
 
         # Initialize the state machine
         self.machine = Machine(model=self, states=robotStateMachine.states, initial='start_gereat', queued=True)
@@ -79,11 +75,14 @@ class robotStateMachine(object):
 
         self.messen()
 
+        ### Tracker fürs regeln
+        self.hasBeenInWaitMode = False
+
         ### PI Controller initialisieren
         print('aktueller Druck', self.MesskarteObj.getP2ProbeMbar())
         print('Setpoint', self.MesskarteObj.getSetpoint())
         self.PI = OsPI(startInput=self.MesskarteObj.getP2ProbeMbar(), startOutput=0,
-                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.003, Ti=300, isRunning=True,
+                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.051, Ti=0.0000, isRunning=True,
                        isNotReverseAction=True)
         # time.sleep(2)
         # print(self.PI.computePI(10,isNoOverschoot=False))
@@ -160,7 +159,7 @@ class robotStateMachine(object):
         return result
 
     def TestMesstaktOver(self):
-        print("TestMesstaktOver", time.time() - self.MesskarteObj.lastMeasurement, self.messtaktCont)
+        # print("TestMesstaktOver", time.time() - self.MesskarteObj.lastMeasurement, self.messtaktCont)
         if time.time() - self.MesskarteObj.lastMeasurement > self.messtaktCont:
             ergebnis = True
         else:
@@ -184,7 +183,7 @@ class robotStateMachine(object):
     def doUserInput(self):
         print('doUserInput')
 
-        self.vState = self.MesskarteObj.getVState()  # states vorsorgich mal aktualisieren
+        # self.vState = self.MesskarteObj.getVState()  # states vorsorgich mal aktualisieren
 
         if self.userCommandManual == 'evacSample':
             print('try to evac manually')
@@ -209,6 +208,8 @@ class robotStateMachine(object):
 
         if self.userCommandManual == 'V1':
             print("Toggle V1")
+            self.vState = self.MesskarteObj.getVState()
+
             if self.vState['V1']['state'] == 'zu':
                 self.MesskarteObj.Ventil_schalten_einzeln(Ventil_name="V1", Befehl_in="auf", einzeln_deaktivieren=False)
             else:
@@ -278,16 +279,18 @@ class robotStateMachine(object):
         self.valveActivationTracker()
 
     def valveActivationTracker(self):
-        print("try tracking valves")
+        # print("try tracking valves")
+        # Todo: zeile entfernen und nach messkarte verlagern
         self.lastDAQAction = time.time()
-        self.lastValveActivation = time.time()
+        # self.lastValveActivation = time.time()
         # self.anyValveOn = True
-        print("valvetracker", self.MesskarteObj.anyValveOn)
+        # print("valvetracker", self.MesskarteObj.anyValveOn)
         self.vState = self.MesskarteObj.getVState()
-        self.aktuellerModus = self.vState['State']['Name']
+        # self.aktuellerModus = self.vState['State']['Name']
 
     def messen(self):
         self.MesskarteObj.readSensors()
+        # Todo: zeile entfernen und nach messkarte verlagern
         self.lastDAQAction = time.time()
         self.lastMeasurement = self.MesskarteObj.lastMeasurement
         self.p1ManifoldMbar = self.MesskarteObj.getP1ManifoldMbar()
@@ -297,43 +300,141 @@ class robotStateMachine(object):
 
 
     def regeln_langsam(self):
+        self.PI.setSetpoint(self.MesskarteObj.getSetpoint())
         stellgrad = self.PI.computePI(self.p2ProbeMbar, isNoOverschoot=False)
+        if stellgrad is None:
+            stellgrad = 0
+
+
+
         print("Regeln langsam:\tp=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.MesskarteObj.getSetpoint(),
               "\tself.aktuellerModus", self.aktuellerModus)
 
         print("alter Stellgrad:\t", self.PropStellgradSollProzent, "\t", "neuer Stellgrad: ", stellgrad)
+        self.PropStellgradSollProzent = stellgrad
 
-        # if self.MesskarteObj.anyValveOn != True:  # nur schalten wenn gerade kein Ventil an ist
-            # print("Kein Ventil a")
-            ## wenn kleine als psoll und kommt aus modus alle zu, sonst mach alle zu
-        if self.p2ProbeMbar < (self.MesskarteObj.getSetpoint() - self.maxDeltaPAllowedMbar):
-            if self.aktuellerModus != "vStateSollDoseFine":
-                print("V_Dose_Fine: nach oben")
-                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
-                self.valveActivationTracker()
+        self.vState = self.MesskarteObj.getVState()
+        self.aktuellerModus = self.vState['State']['Name']
 
-                self.PropStellgradSollProzent = 25
-                print(self.PropStellgradSollProzent)
+        if stellgrad >= 1:
+            if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollDoseFine":
+                try:
+                    print("vStateSollDoseFine")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
+                    self.valveActivationTracker()
+                    print(self.PropStellgradSollProzent)
+                    self.hasBeenInWaitMode = False
+                    # self.PropStellgradSollProzent = stellgrad
+                    # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+                except:
+                    print("Konnte nicht alle Ventile schalten")
+                    pass
 
-        elif self.p2ProbeMbar > (self.MesskarteObj.getSetpoint() + self.maxDeltaPAllowedMbar):
-            if self.aktuellerModus != "vStateSollEvakFine":
-                print("V evac Fine: nach unten")
-                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
-                self.valveActivationTracker()
-                self.PropStellgradSollProzent = 35
-                print(self.PropStellgradSollProzent)
+            if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollDoseFine":
+                try:
+                    print("vStateSollWait")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+                    self.valveActivationTracker()
+                    print(self.PropStellgradSollProzent)
+                    self.hasBeenInWaitMode = True
+                    # self.PropStellgradSollProzent = stellgrad
+                    # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+                except:
+                    print("Konnte nicht alle Ventile schalten")
+                    pass
 
-        else:
-            if self.aktuellerModus != "vStateSollWait":  # nur wenn er es nicht eh schon macht
-                print("Hold")
+        if stellgrad <= -1:
+            if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollEvakFine":
+                try:
+                    print("V evac Fine: nach unten")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
+                    self.valveActivationTracker()
+                    print(self.PropStellgradSollProzent)
+                    self.hasBeenInWaitMode = False
+
+                    # self.PropStellgradSollProzent = stellgrad
+                    # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
+                except:
+                    print("Konnte nicht alle Ventile schalten")
+                    pass
+
+            if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollEvakFine":
+                try:
+                    print("vStateSollWait")
+                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+                    self.valveActivationTracker()
+                    print(self.PropStellgradSollProzent)
+                    self.hasBeenInWaitMode = True
+                    # self.PropStellgradSollProzent = stellgrad
+                    # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
+                except:
+                    print("Konnte nicht alle Ventile schalten")
+                    pass
+
+        if abs(stellgrad) < 1:
+            try:
+                print("vStateSollWait")
                 self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
                 self.valveActivationTracker()
                 print(self.PropStellgradSollProzent)
+                self.PropStellgradSollProzent = stellgrad
+                self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+                self.hasBeenInWaitMode = True
+            except:
+                print("Konnte nicht alle Ventile schalten")
+                pass
+
+        #         try:
+        #             print("Hold")
+        #             self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+        #             self.valveActivationTracker()
+        #             print(self.PropStellgradSollProzent)
+        #             self.PropStellgradSollProzent = stellgrad
+        #             self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+        #         except:
+        #             print("Konnte nicht alle Ventile schalten")
+        #             pass
+        #
+        # else:
+        #     try:
+        #         print("Hold")
+        #         self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+        #         self.valveActivationTracker()
+        #         print(self.PropStellgradSollProzent)
+        #         self.PropStellgradSollProzent = stellgrad
+        #         self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+        #     except:
+        #         print("Konnte nicht alle Ventile schalten")
+        #         pass
+        #
+        # if self.p2ProbeMbar < (self.MesskarteObj.getSetpoint() - self.maxDeltaPAllowedMbar):
+        #     if self.aktuellerModus != "vStateSollDoseFine":
+        #         print("V_Dose_Fine: nach oben")
+        #         self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
+        #         self.valveActivationTracker()
+        #
+        #         self.PropStellgradSollProzent = 25
+        #         print(self.PropStellgradSollProzent)
+        #
+        # elif self.p2ProbeMbar > (self.MesskarteObj.getSetpoint() + self.maxDeltaPAllowedMbar):
+        #     if self.aktuellerModus != "vStateSollEvakFine":
+        #         print("V evac Fine: nach unten")
+        #         self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
+        #         self.valveActivationTracker()
+        #         self.PropStellgradSollProzent = 35
+        #         print(self.PropStellgradSollProzent)
+        #
+        # else:
+        #     if self.aktuellerModus != "vStateSollWait":  # nur wenn er es nicht eh schon macht
+        #         print("Hold")
+        #         self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+        #         self.valveActivationTracker()
+        #         print(self.PropStellgradSollProzent)
 
     def setPropStellgrad(self):
         print("in setPropStellgrad")
         # if self.lastStellgrad != self.PropStellgradSollProzent:
-        self.MesskarteObj.v_Prop_Stellgrad(self.PropStellgradSollProzent)
+        self.MesskarteObj.v_Prop_Stellgrad(abs(self.PropStellgradSollProzent))
         print("neuer stellgrad gesetzt")
         self.lastStellgrad = self.PropStellgradSollProzent
         print("PropSoll", self.PropStellgradSollProzent, "PropIst", self.lastStellgrad)
@@ -341,10 +442,10 @@ class robotStateMachine(object):
 
     def hasToShutOffValve(self):
         # Überprüft ob ein Ventil an ist und die festgelegt minimumaktivierungszeit vorbei ist
-        print("hasToShutOffValve")
-        print("self.MesskarteObj.anyValveOn", self.MesskarteObj.anyValveOn)
-        print("self.MesskarteObj.lastValveActivation", self.MesskarteObj.lastValveActivation)
-        print(" self.MesskarteObj.minimumValveOnTime", self.MesskarteObj.minimumValveOnTime)
+        # print("hasToShutOffValve")
+        # print("self.MesskarteObj.anyValveOn", self.MesskarteObj.anyValveOn)
+        # print("self.MesskarteObj.lastValveActivation", self.MesskarteObj.lastValveActivation)
+        # print(" self.MesskarteObj.minimumValveOnTime", self.MesskarteObj.minimumValveOnTime)
         if self.MesskarteObj.anyValveOn is True and (
                 time.time() - self.MesskarteObj.lastValveActivation) > self.MesskarteObj.minimumValveOnTime:
             result = True

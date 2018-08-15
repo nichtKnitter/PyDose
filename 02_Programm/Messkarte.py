@@ -100,7 +100,7 @@ class Messkarte(object):
         self.vStateSollWait["V5"] = {"state": "zu"}
         self.vStateSollWait["V6"] = {"state": "auf"}
         self.vStateSollWait["V7"] = {"state": "zu"}
-        self.vStateSollWait["V_Prop"] = {"state": "aus"}
+        self.vStateSollWait["V_Prop"] = {"state": "an"}
 
         self.vStateSollAlleAuf = {}
         self.vStateSollAlleAuf["State"] = {"Name": "vStateSollAlleAuf"}
@@ -122,7 +122,7 @@ class Messkarte(object):
         self.vStateSollVolumenEvakGrob["V5"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V6"] = {"state": "zu"}
         self.vStateSollVolumenEvakGrob["V7"] = {"state": "auf"}
-        self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "aus"}
+        self.vStateSollVolumenEvakGrob["V_Prop"] = {"state": "an"}
 
         self.vStateSollEvakFine = {}
         self.vStateSollEvakFine["State"] = {"Name": "vStateSollEvakFine"}
@@ -166,7 +166,7 @@ class Messkarte(object):
         self.vStateSollDegassEvaporator["V5"] = {"state": "auf"}
         self.vStateSollDegassEvaporator["V6"] = {"state": "zu"}
         self.vStateSollDegassEvaporator["V7"] = {"state": "zu"}
-        self.vStateSollDegassEvaporator["V_Prop"] = {"state": "aus"}
+        self.vStateSollDegassEvaporator["V_Prop"] = {"state": "an"}
 
         self.vStateSollEvacFineVol1 = {}
         self.vStateSollEvacFineVol1["State"] = {"Name": "vStateSollEvacFineVol1"}
@@ -177,7 +177,7 @@ class Messkarte(object):
         self.vStateSollEvacFineVol1["V5"] = {"state": "auf"}
         self.vStateSollEvacFineVol1["V6"] = {"state": "zu"}
         self.vStateSollEvacFineVol1["V7"] = {"state": "zu"}
-        self.vStateSollEvacFineVol1["V_Prop"] = {"state": "aus"}
+        self.vStateSollEvacFineVol1["V_Prop"] = {"state": "an"}
 
         self.vStateSollVolSample = {}
         self.vStateSollVolSample["State"] = {"Name": "vStateSollEvacFineVol1"}
@@ -188,7 +188,7 @@ class Messkarte(object):
         self.vStateSollVolSample["V5"] = {"state": "auf"}
         self.vStateSollVolSample["V6"] = {"state": "auf"}
         self.vStateSollVolSample["V7"] = {"state": "zu"}
-        self.vStateSollVolSample["V_Prop"] = {"state": "aus"}
+        self.vStateSollVolSample["V_Prop"] = {"state": "an"}
 
         self.vStateSollDoseFineVol1 = {}
         self.vStateSollDoseFineVol1["State"] = {"Name": "vStateSollEvacFineVol1"}
@@ -199,7 +199,7 @@ class Messkarte(object):
         self.vStateSollDoseFineVol1["V5"] = {"state": "auf"}
         self.vStateSollDoseFineVol1["V6"] = {"state": "zu"}
         self.vStateSollDoseFineVol1["V7"] = {"state": "zu"}
-        self.vStateSollDoseFineVol1["V_Prop"] = {"state": "aus"}
+        self.vStateSollDoseFineVol1["V_Prop"] = {"state": "an"}
 
     def getVState(self):
         return self.v_state
@@ -258,6 +258,7 @@ class Messkarte(object):
                 print(e)
                 self.numberOfCommunicationErrors += 1
                 print("numberOfCommunicationErrors", self.numberOfCommunicationErrors)
+                return e
 
     def stuffAfterReadingSensors(self, data):
         """
@@ -330,6 +331,7 @@ class Messkarte(object):
                     except nidaqmx.DaqError as e:
                         print(e)
                         self.numberOfCommunicationErrors += 1
+                        return e
 
     def v_Prop_Stellgrad(self, Prozent):
         if self.lastStellgrad != Prozent:
@@ -370,6 +372,7 @@ class Messkarte(object):
                     except nidaqmx.DaqError as e:
                         print(e)
                         self.numberOfCommunicationErrors += 1
+                        return e
             return self.v_state
 
     def _alle_aus(self):
@@ -407,6 +410,7 @@ class Messkarte(object):
         except nidaqmx.DaqError as e:
             print(e)
             self.numberOfCommunicationErrors += 1
+            return e
 
     def isAnyValveOn(self):
         if self.v_state["V1"]["active"] is False and self.v_state["V2"]["active"] is False and self.v_state["V3"][
@@ -461,6 +465,7 @@ class Messkarte(object):
                     except nidaqmx.DaqError as e:
                         print(e)
                         self.numberOfCommunicationErrors += 1
+                        return e
         if (Befehl_in == "aus"):
             self.Messkartenlogger.info(self.v_state)
             self.Messkartenlogger.info(Ventil_name)
@@ -492,6 +497,7 @@ class Messkarte(object):
                     except nidaqmx.DaqError as e:
                         print(e)
                         self.numberOfCommunicationErrors += 1
+                        return e
         if (einzeln_deaktivieren == True and Befehl_in != "aus"):
             time.sleep(0.5)
 
@@ -515,6 +521,7 @@ class Messkarte(object):
                 except nidaqmx.DaqError as e:
                     print(e)
                     self.numberOfCommunicationErrors += 1
+                    return e
         return Befehl
 
     def _Ventiladressen(self, Ventil_name):  # Todo: durch dict ersetzen

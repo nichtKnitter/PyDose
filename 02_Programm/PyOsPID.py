@@ -90,6 +90,8 @@ class OsPI():
         T = ∆t
         ∆ei = ei – ei-1
         """
+        print("PI Setpoint", self.setpoint)
+
         if self.isInAutomaticMode is False:
             return
         now = time.time()

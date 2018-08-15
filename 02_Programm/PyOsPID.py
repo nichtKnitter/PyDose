@@ -68,7 +68,11 @@ class OsPI():
         self.wayUp = True
 
     def setSetpoint(self, newSetpoint):
+        "new setpoint in PI controller"
         self.setpoint = newSetpoint
+        self.currentOutput = 0
+        self.lastOutput = 0
+        self.lastError = 0
 
     def computePI(self, Input, isNoOverschoot=True):
         """
@@ -94,9 +98,12 @@ class OsPI():
 
         if self.isInAutomaticMode is False:
             return
+
         now = time.time()
         deltaT = (now - self.lastTime)
+
         if deltaT >= self.sampletime:
+
 
             # saving values
             self.lastError = self.error
@@ -104,21 +111,22 @@ class OsPI():
 
             #compute Error
             self.error = self.setpoint - Input
+            print("test2")
             # PI Algorithm
             #          Velocity (Discrete) Controller Form
             #          delta CO = Kc * (1+T / Ti) * e_i-1
 
             # deltaCO = self.Kp * (1+deltaT/self.Ti) * self.lastError
             deltaCO = self.Kc * (1 + self.sampletime / self.Ti) * self.lastError
-
+            print("deltaCO", deltaCO)
             currentOutputlLocal = self.lastOutput + deltaCO
+            print("test1")
 
             # check for max output values
             if currentOutputlLocal > self.maxOutput:
                 currentOutputlLocal = self.maxOutput
             if currentOutputlLocal < self.minOutput:
                 currentOutputlLocal = self.minOutput
-
 
 
             # new output, ganz am ende:
@@ -164,6 +172,7 @@ class OsPI():
 
     def SetTunings(self, Kc, Ti):
         if Kc < 0 or Ti < 0:
+            print("unallowed values for PI controller")
             return
         self.Kc = Kc
         self.Ti = Ti * self.sampletime

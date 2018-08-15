@@ -8,7 +8,7 @@ from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-Statemachinelogger = logging.getLogger('transitions').setLevel(logging.CRITICAL)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.DEBUG)
 
 
 ### Loggin in Console Stoppen
@@ -82,7 +82,7 @@ class robotStateMachine(object):
         print('aktueller Druck', self.MesskarteObj.getP2ProbeMbar())
         print('Setpoint', self.MesskarteObj.getSetpoint())
         self.PI = OsPI(startInput=self.MesskarteObj.getP2ProbeMbar(), startOutput=0,
-                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.051, Ti=0.0000, isRunning=True,
+                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.051, Ti=1000, isRunning=True,
                        isNotReverseAction=True)
         # time.sleep(2)
         # print(self.PI.computePI(10,isNoOverschoot=False))
@@ -300,11 +300,14 @@ class robotStateMachine(object):
 
 
     def regeln_langsam(self):
+        print(1)
         self.PI.setSetpoint(self.MesskarteObj.getSetpoint())
+        print(self.p2ProbeMbar)
         stellgrad = self.PI.computePI(self.p2ProbeMbar, isNoOverschoot=False)
+        print(3)
         if stellgrad is None:
             stellgrad = 0
-
+        print(4)
 
 
         print("Regeln langsam:\tp=", "{0:0.2f}".format(self.p2ProbeMbar), "\tpsoll=", self.MesskarteObj.getSetpoint(),

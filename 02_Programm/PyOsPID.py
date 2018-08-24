@@ -48,7 +48,9 @@ class OsPI():
     def __init__(self, startInput, startOutput, Setpoint, Kp, Ti, isRunning=False, isNotReverseAction = True):
         self.isInAutomaticMode = isRunning
         self.setMode(isRunning)
-        self.sampletime = 1
+        # Todo: sampletime anpassen, über portierte methode von setSampletime setzen, damit parameter unabhängig von ihr bleiben
+
+        self.sampletime = 0.02
 
         self.setpoint = Setpoint
         self.isNewSetpoint = False
@@ -70,9 +72,9 @@ class OsPI():
     def setSetpoint(self, newSetpoint):
         "new setpoint in PI controller"
         self.setpoint = newSetpoint
-        self.currentOutput = 0
-        self.lastOutput = 0
-        self.lastError = 0
+        # self.currentOutput = 0
+        # self.lastOutput = 0
+        # self.lastError = 0
 
     def computePI(self, Input, isNoOverschoot=True):
         """
@@ -131,6 +133,7 @@ class OsPI():
 
             # new output, ganz am ende:
             self.currentOutput = currentOutputlLocal
+            self.lastTime = now
 
 
             def restetPi(self):
@@ -206,7 +209,7 @@ class OsPID:
 
         self.isInAutomaticMode = inAuto
 
-        self.sampletime = 0.1  # default Controller Sample Time is 0.1 seconds
+        self.sampletime = 0.005  # default Controller Sample Time is 0.1 seconds
         self.now = time.time()
         self.lastTime = time.time() - self.sampletime
 

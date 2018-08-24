@@ -8,15 +8,21 @@ from transitions import Machine
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-Statemachinelogger = logging.getLogger('transitions').setLevel(logging.DEBUG)
+Statemachinelogger = logging.getLogger('transitions').setLevel(logging.CRITICAL)
 
 
 ### Loggin in Console Stoppen
 
 
-
+"""
+vielleicht auf einfachen P-regler Umsteigen?  
+Oder eine Kaskade, der erste PI Regler gibt dP/dt vor, der zweite P regler versucht das abzufahren?  
+als nächstes eigene kleine regelstatemachine, damit sichergestellt ist das dose mit evak nur über warten eschaltet wird
+"""
 
 class robotStateMachine(object):
+    filename = "messdaten.csv"
+
     states = ['start_gereat', 'start_messung', 'start_cycle', 'segmentpruefung', 'messen', 'regelmoduspruefung',
               'regeln_langsam', 'regelnLangsamPropventil', 'warten', 'VentileAusschalten', 'messenCont', 'UserInput']
     # segTime = 0
@@ -28,11 +34,11 @@ class robotStateMachine(object):
 
         # Taktzeit eines Kompletten Statemachinecycles, warten Cycle dauert so lang an bis das erfüllt ist
         self.startAktTackt = time.time()
-        self.gereateTackt = 0.002
-        self.messtaktCont = 0.001
+        self.gereateTackt = 0.02
+        self.messtaktCont = 0.01
 
         # Schnellmoegliche DAQ Befehl Sequenzen
-        self.DAQminimumTakt = 0.0005
+        self.DAQminimumTakt = 0.005
         # self.lastDAQAction = time.time()  # Verfolgt letzte Messkartenaktion, es ist wahrscheinlich eine minimale Pause erforderlich
 
         ## minimum Aktivzeit für Ventile ~ 0.35 s
@@ -46,7 +52,7 @@ class robotStateMachine(object):
         # aktueller Solldruck
         self.MesskarteObj.setSetpoint(0)
         # erlaubte regelabweichung
-        self.maxDeltaPAllowedMbar = 0.1
+        self.maxDeltaPAllowedMbar = 0.2
 
         # initialer Stellgrad de Proportionalventils
         self.PropStellgradSollProzent = 0
@@ -82,7 +88,7 @@ class robotStateMachine(object):
         print('aktueller Druck', self.MesskarteObj.getP2ProbeMbar())
         print('Setpoint', self.MesskarteObj.getSetpoint())
         self.PI = OsPI(startInput=self.MesskarteObj.getP2ProbeMbar(), startOutput=0,
-                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.051, Ti=1000, isRunning=True,
+                       Setpoint=self.MesskarteObj.getSetpoint(), Kp=0.0005, Ti=0.1 / 20, isRunning=True,
                        isNotReverseAction=True)
         # time.sleep(2)
         # print(self.PI.computePI(10,isNoOverschoot=False))
@@ -296,6 +302,12 @@ class robotStateMachine(object):
         self.p1ManifoldMbar = self.MesskarteObj.getP1ManifoldMbar()
         self.p2ProbeMbar = self.MesskarteObj.getP2ProbeMbar()
 
+        with open(self.filename, mode="a") as f:
+            zeile = str(time.time()) + "," + str(self.p1ManifoldMbar) + "," + str(self.p2ProbeMbar) + "\n"
+            f.write(zeile)
+            # writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            # writer.writerow([time.time(), self.p1ManifoldMbar, self.p2ProbeMbar])
+
 
 
 
@@ -306,7 +318,7 @@ class robotStateMachine(object):
         stellgrad = self.PI.computePI(self.p2ProbeMbar, isNoOverschoot=False)
         print(3)
         if stellgrad is None:
-            stellgrad = 0
+            stellgrad = self.lastStellgrad
         print(4)
 
 
@@ -319,73 +331,75 @@ class robotStateMachine(object):
         self.vState = self.MesskarteObj.getVState()
         self.aktuellerModus = self.vState['State']['Name']
 
-        if stellgrad >= 1:
-            if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollDoseFine":
-                try:
-                    print("vStateSollDoseFine")
-                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
-                    self.valveActivationTracker()
-                    print(self.PropStellgradSollProzent)
-                    self.hasBeenInWaitMode = False
-                    # self.PropStellgradSollProzent = stellgrad
-                    # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
-                except:
-                    print("Konnte nicht alle Ventile schalten")
-                    pass
+        if time.time() - self.MesskarteObj.lastValveActivation > self.MesskarteObj.minimumValveOnTime + 0.1:
 
-            if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollDoseFine":
+            if stellgrad >= 1:
+                if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollDoseFine":
+                    try:
+                        print("vStateSollDoseFine")
+                        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollDoseFine, False)
+                        self.valveActivationTracker()
+                        print(self.PropStellgradSollProzent)
+                        self.hasBeenInWaitMode = False
+                        # self.PropStellgradSollProzent = stellgrad
+                        # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+                    except:
+                        print("Konnte nicht alle Ventile schalten")
+                        pass
+
+                if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollDoseFine":
+                    try:
+                        print("vStateSollWait")
+                        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+                        self.valveActivationTracker()
+                        print(self.PropStellgradSollProzent)
+                        self.hasBeenInWaitMode = True
+                        # self.PropStellgradSollProzent = stellgrad
+                        # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
+                    except:
+                        print("Konnte nicht alle Ventile schalten")
+                        pass
+
+            if stellgrad <= -1:
+                if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollEvakFine":
+                    try:
+                        print("V evac Fine: nach unten")
+                        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
+                        self.valveActivationTracker()
+                        print(self.PropStellgradSollProzent)
+                        self.hasBeenInWaitMode = False
+
+                        # self.PropStellgradSollProzent = stellgrad
+                        # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
+                    except:
+                        print("Konnte nicht alle Ventile schalten")
+                        pass
+
+                if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollEvakFine":
+                    try:
+                        print("vStateSollWait")
+                        self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
+                        self.valveActivationTracker()
+                        print(self.PropStellgradSollProzent)
+                        self.hasBeenInWaitMode = True
+                        # self.PropStellgradSollProzent = stellgrad
+                        # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
+                    except:
+                        print("Konnte nicht alle Ventile schalten")
+                        pass
+
+            if abs(stellgrad) < 1:
                 try:
                     print("vStateSollWait")
                     self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
                     self.valveActivationTracker()
                     print(self.PropStellgradSollProzent)
+                    self.PropStellgradSollProzent = stellgrad
+                    self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
                     self.hasBeenInWaitMode = True
-                    # self.PropStellgradSollProzent = stellgrad
-                    # self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
                 except:
                     print("Konnte nicht alle Ventile schalten")
                     pass
-
-        if stellgrad <= -1:
-            if self.hasBeenInWaitMode is True and self.aktuellerModus != "vStateSollEvakFine":
-                try:
-                    print("V evac Fine: nach unten")
-                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollEvakFine, False)
-                    self.valveActivationTracker()
-                    print(self.PropStellgradSollProzent)
-                    self.hasBeenInWaitMode = False
-
-                    # self.PropStellgradSollProzent = stellgrad
-                    # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
-                except:
-                    print("Konnte nicht alle Ventile schalten")
-                    pass
-
-            if self.hasBeenInWaitMode is False and self.aktuellerModus != "vStateSollEvakFine":
-                try:
-                    print("vStateSollWait")
-                    self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
-                    self.valveActivationTracker()
-                    print(self.PropStellgradSollProzent)
-                    self.hasBeenInWaitMode = True
-                    # self.PropStellgradSollProzent = stellgrad
-                    # self.MesskarteObj.v_Prop_Stellgrad(-stellgrad)
-                except:
-                    print("Konnte nicht alle Ventile schalten")
-                    pass
-
-        if abs(stellgrad) < 1:
-            try:
-                print("vStateSollWait")
-                self.MesskarteObj.Ventile_schalten_ges(self.MesskarteObj.vStateSollWait, False)
-                self.valveActivationTracker()
-                print(self.PropStellgradSollProzent)
-                self.PropStellgradSollProzent = stellgrad
-                self.MesskarteObj.v_Prop_Stellgrad(stellgrad)
-                self.hasBeenInWaitMode = True
-            except:
-                print("Konnte nicht alle Ventile schalten")
-                pass
 
         #         try:
         #             print("Hold")

@@ -89,7 +89,7 @@ class Messkarte(object):
         self.vStateSollAlleZu["V5"] = {"state": "zu"}
         self.vStateSollAlleZu["V6"] = {"state": "zu"}
         self.vStateSollAlleZu["V7"] = {"state": "zu"}
-        self.vStateSollAlleZu["V_Prop"] = {"state": "aus"}
+        self.vStateSollAlleZu["V_Prop"] = {"state": "an"}
 
         self.vStateSollWait = {}
         self.vStateSollWait["State"] = {"Name": "vStateSollWait"}
@@ -307,31 +307,31 @@ class Messkarte(object):
             Befehl = Ventil_an
         if (Befehl_in == "aus"):
             Befehl = Ventil_aus
-        if (self.v_state["V_Prop"][
-            "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
+        # if (self.v_state["V_Prop"][
+        #     "state"] != Befehl_in):  # soll nur schalten wenn Ventil nicht eh schon in Stellung ist
 
-            if self.isDebugDummyMode is True:
-                self.v_state["V_Prop"]["state"] = Befehl_in
-                print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                print("in Ventil.task", self.v_state["V_Prop"])
-                self.lastDAQtime = time.time()
+        if self.isDebugDummyMode is True:
+            self.v_state["V_Prop"]["state"] = Befehl_in
+            print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+            print("in Ventil.task", self.v_state["V_Prop"])
+            self.lastDAQtime = time.time()
 
-            if self.isDebugDummyMode is False:
+        if self.isDebugDummyMode is False:
+            try:
                 with nidaqmx.Task() as VentilTask:
-                    try:
-                        VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
-                        VentilTask.write(Befehl)
-                        self.v_state["V_Prop"]["state"] = Befehl_in
-                        print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
-                        print("in Ventil.task", self.v_state["V_Prop"])
-                        self.lastDAQtime = time.time()
-                        time.sleep(self.DAQwaitTime)
+                    VentilTask.do_channels.add_do_chan(Ventiladresse, line_grouping=LineGrouping.CHAN_PER_LINE)
+                    VentilTask.write(Befehl)
+                    self.v_state["V_Prop"]["state"] = Befehl_in
+                    print("Ventil:\t", "V_Prop", "\tBefehl_in:\t", Befehl_in, "\tBefehl:\t", Befehl)
+                    print("in Ventil.task", self.v_state["V_Prop"])
+                    self.lastDAQtime = time.time()
+                    time.sleep(self.DAQwaitTime)
 
 
-                    except nidaqmx.DaqError as e:
-                        print(e)
-                        self.numberOfCommunicationErrors += 1
-                        return e
+            except nidaqmx.DaqError as e:
+                print(e)
+                self.numberOfCommunicationErrors += 1
+                return e
 
     def v_Prop_Stellgrad(self, Prozent):
         if self.lastStellgrad != Prozent:
@@ -420,6 +420,7 @@ class Messkarte(object):
 
 
     def Ventil_schalten_einzeln(self, Ventil_name="V1", Befehl_in="zu", einzeln_deaktivieren=True):
+        # Todo: wenn fehler, state auf V-State ini setzen
         Ventiladresse = self._Ventiladressen(Ventil_name)
         if (Befehl_in == "auf"):
             Befehl = self.ventil_auf

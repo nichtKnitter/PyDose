@@ -155,8 +155,9 @@ class Example(QtGui.QMainWindow, Ui_MainWindow):
         Guilogger.debug(str(self.localRobotStMachObj.getIsRunning()))
 
         message = "Automatic Control: " + str(self.localRobotStMachObj.getIsRunning()) + "\t\t\tActual Mode: " + \
-                  self.vState['State']['Name'] + "\t\t\tStellgrad: " + str(
+                  self.vState['State']['Name'] + "\t\t\tStellgrad: " + "{0:0.2f}".format(
             self.localRobotStMachObj.MesskarteObj.lastStellgrad)
+
         # print(message)
         self.statusBar().showMessage(message)
         if self.localRobotStMachObj.getIsRunning() is True:
